@@ -1,0 +1,11 @@
+{
+  "name": "bridgends",
+  "version": "1.0.0",
+  "description": "development tool to cache, test, debug, proxy, mock backends API.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mojtaba Zarei(fingerpich)",
+  "license": "ISC"
+}
