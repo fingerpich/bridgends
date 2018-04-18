@@ -7,5 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Mojtaba Zarei(fingerpich)",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "zlib": "^1.0.5"
+  }
 }
