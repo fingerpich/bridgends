@@ -50,10 +50,10 @@ class CacheResponds {
         });
     }
 
-    _getFileName (envelope) {
+    _getFileName (req) {
         let bodyHash = '';
-        if (envelope.reqMethod !== 'GET') {
-            hasher.update(envelope.reqBody);
+        if (req.method !== 'GET') {
+            hasher.update(req.reqBody);
             bodyHash = hasher.digest('hex');
         }
 

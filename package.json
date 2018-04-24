@@ -4,11 +4,16 @@
   "description": "development tool to cache, test, debug, proxy, mock backends API.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "author": "Mojtaba Zarei(fingerpich)",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.16.3",
+    "filendir": "^1.0.1",
+    "raw-body": "^2.3.2",
+    "request": "^2.85.0",
     "zlib": "^1.0.5"
   }
 }
