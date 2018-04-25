@@ -19,7 +19,7 @@ module.exports = (request) => {
                     body = buffer;
                 }
                 body = body ? body.toString() : '';
-                resolve({body, resTime, reqTime});
+                resolve({body, resTime, reqTime, headers: apiRes.headers , statusCode: apiRes.statusCode});
             });
         });
         request.on('error', (error) => {

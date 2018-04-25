@@ -1,6 +1,6 @@
 const fs = require('fs');
 const filendir = require('filendir');
-const getRawBody = require('getRawBody');
+const getRawBody = require('raw-body');
 
 class RequestManager {
     constructor () {
@@ -34,12 +34,14 @@ class RequestManager {
 
     accessed (req) {
         const matches = this.list.filter(r => r.req.url === req.url);
-        let match = matches[0];
+        let match;
         if (!matches.length) {
-            match = new request(req);
+            match = new request();
             this.list.push(match);
+        } else {
+            match = matches[0];
         }
-        match.accessed();
+        match.accessed(req);
         this._updateReqFile();
         return match;
     }
@@ -63,18 +65,45 @@ class RequestManager {
 class request {
     constructor (req) {
         this.usedDates = [];
+        if (req) { Object.assign(this, req); }
+    }
+
+
+    getRespondSetting() {
+        return new Promise((resolve, reject) => {
+            if (this.fake) {
+                return resolve({responder:'fake', fakeID: this.fake});
+            } else if (this.cache) {
+                return resolve({responder:'cache', cacheID: this.cache});
+            } else {
+                return resolve({responder:'api'});
+            }
+        });
+    }
+
+    accessed (req) {
+        this.req = {url: req.url};
         if (req.method !== 'GET') {
-            getRawBody(req).then(function (bodyBuffer) {
-                this.reqBody = bodyBuffer.toString()
-            }).catch(function () {
+            getRawBody(req).then((bodyBuffer) => {
+                this.req.reqBody = bodyBuffer.toString();
+            }, () => {
                 console.log('Unhandled error in getRawBody', arguments)
             })
         }
-        this.req = {url: req.url};
+
+        this.usedDates.unshift(Date.now());
+        if (this.usedDates.length > 10) this.usedDates.pop();
+        this.lastUsed = this.usedDates[0];
     }
 
-    accessed () {
-        this.usedDates.push(Date.now());
+    getCacheData (apiResponded) {
+        let saveInCache = true;
+        const isRespondError = apiResponded.statusCode !== 200;
+        const isRespondHasData = apiResponded.body;
+        if (this.checkIsNotError) saveInCache = saveInCache && isRespondError;
+        if (this.hasData) saveInCache = saveInCache && isRespondHasData;
+        if (saveInCache) return Promise.resolve({cacheID: 1, ...apiResponded});
+        else Promise.reject('decided to not cache it');
     }
 }
 

@@ -1,7 +1,6 @@
 const getRequestResult = require('./helpers/getRestResult.js');
 const urlFixer = require('./helpers/urlFixer.js');
 const cache = require('./cacheResponds/cache.js');
-const Envelope = require('./cacheResponds/envelope.js');
 const faker = require('./fakeApi/faker.js');
 const express = require('express');
 const request = require('request');
@@ -10,39 +9,31 @@ const reqManager = require('./requestManager/reqManager.js');
 
 class Bridgends {
 
-    _chooseRespondWay(way) {
-        switch (way) {
-            case 'fake': return Promise.resolve(faker.respond(req));
-            case 'cache': return Promise.resolve(cache.respond(req));
-            case 'api': return this.apiPromise;
-        }
-    }
-
     _cacheMiddleWare (req, res, next) {
         const requested = reqManager.accessed(req);
-        this.apiPromise = this._sendRequestToApi(req).then((data) => {
-            const parsedResp = Envelope.fromData(data);
-
-            let shouldSave = true;
-            const checks = requested.getCacheChecks(req);
-            if (checks.checkIsNotError) shouldSave = shouldSave && parsedResp.checkError();
-            if (checks.hasData) shouldSave = shouldSave && parsedResp.checkHasData();
-
-            if (shouldSave) {
-                cache.saveRequest(parsedResp);
-            }
-            requested.respondWith(shouldSave, parsedResp.checkError(), parsedResp.checkHasData());
-            return data;
+        this.apiPromise = this._sendRequestToApi(req).then((parsedResp) => {
+            requested.getCacheData(parsedResp).then((data) => {
+                cache.saveRequest(data);
+            });
+            return parsedResp;
         });
 
-        this._chooseRespondWay(requested.way).then((data) => {
-            reqManager.respondWith(req, data);
-            if (!res.headersSent) {
-                res.writeHead(200, data.headers);
-                res.end(data.body);
-            }
-            next();
-        });
+        requested.getRespondSetting()
+            .then(options => {
+                switch (options.responder) {
+                    case 'fake': return Promise.resolve(faker.respond(options.fakeID));
+                    case 'cache': return Promise.resolve(cache.respond(options.cacheID));
+                    case 'api': return this.apiPromise;
+                }
+            })
+            .then((data) => {
+                reqManager.respondWith(req, data);
+                if (!res.headersSent) {
+                    res.writeHead(data.statusCode, data.headers);
+                    res.end(data.body);
+                }
+                next();
+            });
     }
 
     _sendRequestToApi (req) {
