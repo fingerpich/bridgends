@@ -1,19 +1,17 @@
 const filendir = require('filendir');
-const crypto = require('crypto');
-const Envelope = require('./envelope.js');
-const hasher = crypto.createHash('sha256');
+const path = require('path');
 
 class CacheResponds {
     constructor () {
 
     }
 
-    start ({savePath}) {
-        this.savePath = savePath;
+    start ({dir}) {
+        this.savePath = dir;
     }
 
     saveRequest (envelope) {
-        const filePath = this._getFileName(cacheID);
+        const filePath = this._getFileName(envelope.cacheID);
         filendir.writeFile(filePath, JSON.stringify(envelope), function (err) {
             if (err) {
                 log('File could not be saved in ' + this.savePath);

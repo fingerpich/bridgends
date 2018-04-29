@@ -3,7 +3,7 @@ class FakeApi {
 
     }
     start (config) {
-        config.saveDir
+        config.dir
     }
 
     addFakeResponse (req, res) {

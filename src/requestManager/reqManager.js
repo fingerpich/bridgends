@@ -1,7 +1,7 @@
 const fs = require('fs');
 const filendir = require('filendir');
 const getRawBody = require('raw-body');
-
+let cacheIDCounter = 111;
 class RequestManager {
     constructor () {
         this.list = [];
@@ -13,7 +13,7 @@ class RequestManager {
         try {
             data = fs.readFileSync(this.savePath, 'utf-8');
         } catch (e) {
-
+            console.log('error in reading requests.json file');
         }
         if (data) {
             const parsed = JSON.parse(data);
@@ -41,7 +41,7 @@ class RequestManager {
         } else {
             match = matches[0];
         }
-        match.accessed(req);
+        match.requested(req);
         this._updateReqFile();
         return match;
     }
@@ -72,16 +72,16 @@ class request {
     getRespondSetting() {
         return new Promise((resolve, reject) => {
             if (this.fake) {
-                return resolve({responder:'fake', fakeID: this.fake});
+                return resolve({responder:'fake', fakeID: this.fakeID});
             } else if (this.cache) {
-                return resolve({responder:'cache', cacheID: this.cache});
+                return resolve({responder:'cache', cacheID: this.cacheID});
             } else {
                 return resolve({responder:'api'});
             }
         });
     }
 
-    accessed (req) {
+    requested (req) {
         this.req = {url: req.url};
         if (req.method !== 'GET') {
             getRawBody(req).then((bodyBuffer) => {
@@ -97,13 +97,19 @@ class request {
     }
 
     getCacheData (apiResponded) {
-        let saveInCache = true;
-        const isRespondError = apiResponded.statusCode !== 200;
-        const isRespondHasData = apiResponded.body;
-        if (this.checkIsNotError) saveInCache = saveInCache && isRespondError;
-        if (this.hasData) saveInCache = saveInCache && isRespondHasData;
-        if (saveInCache) return Promise.resolve({cacheID: 1, ...apiResponded});
-        else Promise.reject('decided to not cache it');
+        return new Promise((resolve, reject) => {
+            let saveInCache = true;
+            const isRespondError = apiResponded.statusCode !== 200;
+            const isRespondHasData = apiResponded.body;
+            if (this.checkIsNotError) saveInCache = saveInCache && isRespondError;
+            if (this.hasData) saveInCache = saveInCache && isRespondHasData;
+            if (saveInCache) {
+                const cacheID = this.cacheID || ++cacheIDCounter;
+                this.cacheID =  cacheID;
+                resolve({cacheID, ...apiResponded});
+            }
+            else reject('decided to not cache it');
+        });
     }
 }
 
