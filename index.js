@@ -1,8 +1,4 @@
 const bridgends = require('./src/bridgends.js');
+const config = require('./config.js');
 
-bridgends.start({
-    apiPath: '/api',
-    target: 'http://192.168.82.198:81/api/',
-    saveDir: 'cache_api/',
-    port: 6464,
-});
+bridgends.start(config);

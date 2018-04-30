@@ -3,6 +3,7 @@ const urlFixer = require('./helpers/urlFixer.js');
 const cache = require('./cacheResponds/cache.js');
 const faker = require('./fakeApi/faker.js');
 const express = require('express');
+const uiServer = require('./userInterface/uiServer.js');
 const request = require('request');
 
 const reqManager = require('./requestManager/reqManager.js');
@@ -44,19 +45,21 @@ class Bridgends {
     }
 
     start (config) {
-        this.config = {...{
-                apiPath:'/api',
-                port: 6464,
-                saveDir:'cache_api/'
-            }, ...config};
+        const defaultConfig = {
+            apiPath:'/api',
+            port: 6464,
+            uiPath: '/reqManger/',
+            saveDir:'cache_api/'
+        };
+        this.config = {...defaultConfig, ...config};
         const app = express();
 
         faker.start({ dir: this.config.saveDir});
         cache.start({ dir: this.config.saveDir});
         reqManager.start({ dir: this.config.saveDir});
-
         app.use(this.config.apiPath, this._cacheMiddleWare.bind(this));
-        app.listen(this.config.port, () => {console.log(`open http://localhost:${this.config.port}!`);});
+        app.use(this.config.uiPath, uiServer);
+        app.listen(this.config.port, () => {console.log(`open http://localhost:${this.config.port + this.config.uiPath}!`);});
     }
 }
 
