@@ -9,14 +9,14 @@ const state = {
 
 // getters
 const getters = {
-  allrequests: state => state.requests,
+  allRequests: state => state.requests,
 }
 
 // actions
 const actions = {
-  loadTests ({ commit }, options) {
-    return axios.get(config.uiPath + '/reqlist', {params: options}).then(res => {
-      commit('fillRequests', res.data.data)
+  loadRequests ({ commit }, options) {
+    return axios.get(config.uiPath + '/reqList', {params: options}).then(res => {
+      commit('fillRequests', res.data)
     })
   }
 }
@@ -26,8 +26,11 @@ const actions = {
 // mutations must be synchronous and can be recorded by plugins
 // for debugging purposes.
 const mutations = {
-  fillRequests (state, {items}) {
+  fillRequests (state, items) {
     state.requests = items
+    state.requests.forEach((req) => {
+      req.freq = req.usedDates.filter((d) => (Date.now() - d) < 1000 * 60).length
+    })
   },
 }
 

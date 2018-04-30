@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const reqManager = require('../requestManager/reqManager.js');
 
 // middleware that is specific to this router
 // router.use(function timeLog (req, res, next) {
@@ -14,8 +15,7 @@ router.get('/', function (req, res) {
 
 // define the about route
 router.get('/reqList', function (req, res) {
-
-    res.send('About birds')
+    res.send(JSON.stringify(reqManager.list));
 });
 
 module.exports = router;

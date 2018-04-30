@@ -5,7 +5,9 @@
 const path = require('path')
 const config = require('../../../../config.js');
 const proxyTable = {};
-proxyTable[config.uiPath] = 'http://localhost:' + config.port + '/reqManagerUIS';
+proxyTable[config.uiPath] = {
+  target: 'http://localhost:' + config.port + '/'
+};
 
 module.exports = {
   dev: {

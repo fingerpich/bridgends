@@ -48,7 +48,7 @@ class Bridgends {
         const defaultConfig = {
             apiPath:'/api',
             port: 6464,
-            uiPath: '/reqManger/',
+            uiPath: '/reqManger',
             saveDir:'cache_api/'
         };
         this.config = {...defaultConfig, ...config};

@@ -1,25 +1,27 @@
 const fs = require('fs');
 const filendir = require('filendir');
-const getRawBody = require('raw-body');
-let cacheIDCounter = 111;
+const proxiedRequest = require('./proxiedRequest.js');
+const fileName = 'requests.json';
+
 class RequestManager {
     constructor () {
         this.list = [];
     }
 
     start ({dir}) {
-        this.savePath = dir + 'requests.json';
+        this.savePath = dir + fileName;
         let data;
         try {
             data = fs.readFileSync(this.savePath, 'utf-8');
         } catch (e) {
-            console.log('error in reading requests.json file');
+            console.log('error in reading ' + fileName + ' file');
+            console.log(e);
         }
         if (data) {
             const parsed = JSON.parse(data);
-            parsed.map((rq) => {
-                return new request(rq);
-            })
+            this.list = parsed.map((rq) => {
+                return new proxiedRequest(rq);
+            });
         }
     }
 
@@ -36,7 +38,7 @@ class RequestManager {
         const matches = this.list.filter(r => r.req.url === req.url);
         let match;
         if (!matches.length) {
-            match = new request();
+            match = new proxiedRequest();
             this.list.push(match);
         } else {
             match = matches[0];
@@ -59,57 +61,6 @@ class RequestManager {
     }
     getCacheChecks (req) {
 
-    }
-}
-
-class request {
-    constructor (req) {
-        this.usedDates = [];
-        if (req) { Object.assign(this, req); }
-    }
-
-
-    getRespondSetting() {
-        return new Promise((resolve, reject) => {
-            if (this.fake) {
-                return resolve({responder:'fake', fakeID: this.fakeID});
-            } else if (this.cache) {
-                return resolve({responder:'cache', cacheID: this.cacheID});
-            } else {
-                return resolve({responder:'api'});
-            }
-        });
-    }
-
-    requested (req) {
-        this.req = {url: req.url};
-        if (req.method !== 'GET') {
-            getRawBody(req).then((bodyBuffer) => {
-                this.req.reqBody = bodyBuffer.toString();
-            }, () => {
-                console.log('Unhandled error in getRawBody', arguments)
-            })
-        }
-
-        this.usedDates.unshift(Date.now());
-        if (this.usedDates.length > 10) this.usedDates.pop();
-        this.lastUsed = this.usedDates[0];
-    }
-
-    getCacheData (apiResponded) {
-        return new Promise((resolve, reject) => {
-            let saveInCache = true;
-            const isRespondError = apiResponded.statusCode !== 200;
-            const isRespondHasData = apiResponded.body;
-            if (this.checkIsNotError) saveInCache = saveInCache && isRespondError;
-            if (this.hasData) saveInCache = saveInCache && isRespondHasData;
-            if (saveInCache) {
-                const cacheID = this.cacheID || ++cacheIDCounter;
-                this.cacheID =  cacheID;
-                resolve({cacheID, ...apiResponded});
-            }
-            else reject('decided to not cache it');
-        });
     }
 }
 
