@@ -8,6 +8,10 @@ class RequestManager {
         this.list = [];
     }
 
+    getRequestsStates () {
+        return this.list.map(r => r.getState());
+    }
+
     start ({dir}) {
         this.savePath = dir + fileName;
         let data;
@@ -26,7 +30,7 @@ class RequestManager {
     }
 
     _updateReqFile () {
-        filendir.writeFile(this.savePath, JSON.stringify(this.list), function (err) {
+        filendir.writeFile(this.savePath, JSON.stringify(this.list.map(req => req.serialize())), function (err) {
             if (err) {
                 console.log('File could not be saved in ' + this.savePath);
                 throw err;

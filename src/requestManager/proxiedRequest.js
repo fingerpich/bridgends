@@ -7,14 +7,35 @@ class ProxiedRequest {
         if (req) { Object.assign(this, req); }
     }
 
+    serialize () {
+        return {
+            req: this.req,
+            usedDates: this.usedDates,
+            status: this.status,
+            respondedBy : this.respondedBy
+        }
+    }
+
+    getState () {
+        const s = this.serialize();
+        s.respond = this.respond;
+        s.realRespond = this.realRespond;
+        return s;
+    }
+    respondWith (respond) {
+        this.respond = respond;
+    }
 
     getRespondSetting() {
         return new Promise((resolve, reject) => {
             if (this.fake) {
+                this.respondedBy = 'fake';
                 return resolve({responder:'fake', fakeID: this.fakeID});
             } else if (this.cache) {
+                this.respondedBy = 'cache';
                 return resolve({responder:'cache', cacheID: this.cacheID});
             } else {
+                this.respondedBy = 'api';
                 return resolve({responder:'api'});
             }
         });
@@ -42,7 +63,8 @@ class ProxiedRequest {
         this.lastUsed = this.usedDates[0];
     }
 
-    getCacheData (apiResponded) {
+    checkAndSerializeDataToCache (apiResponded) {
+        this.realRespond = apiResponded;
         return new Promise((resolve, reject) => {
             let saveInCache = true;
             const isRespondError = apiResponded.statusCode !== 200;
@@ -54,8 +76,7 @@ class ProxiedRequest {
                 const cacheID = this.cacheID || ++cacheIDCounter;
                 this.cacheID =  cacheID;
                 resolve({cacheID, ...apiResponded});
-            }
-            else reject('decided to not cache it');
+            } else reject('decided to not cache it');
         });
     }
 }

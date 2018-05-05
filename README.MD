@@ -18,7 +18,7 @@ What Bridgends do
  - Tests and shows status of the API
  - Responds the same request respond if it didn't cached before
  - Makes you be able to change behave of every request in its ui
-
+ - It will show what browser or webpack proxy send to the server and what is respond.
 
 ## install
 

@@ -12,10 +12,13 @@ class Bridgends {
 
     _cacheMiddleWare (req, res, next) {
         const requested = reqManager.accessed(req);
+        uiServer.broadCast(requested.serialize());
+
         this.apiPromise = this._sendRequestToApi(req).then((parsedResp) => {
-            requested.getCacheData(parsedResp).then((data) => {
+            requested.checkAndSerializeDataToCache(parsedResp).then((data) => {
                 cache.saveRequest(data);
             });
+            uiServer.broadCast(requested.serialize());
             return parsedResp;
         });
 
@@ -28,7 +31,8 @@ class Bridgends {
                 }
             })
             .then((data) => {
-                reqManager.respondWith(req, data);
+                requested.respondWith(data);
+                uiServer.broadCast(requested.serialize());
                 if (!res.headersSent) {
                     res.writeHead(data.statusCode, data.headers);
                     res.end(data.body);
@@ -58,8 +62,10 @@ class Bridgends {
         cache.start({ dir: this.config.saveDir});
         reqManager.start({ dir: this.config.saveDir});
         app.use(this.config.apiPath, this._cacheMiddleWare.bind(this));
-        app.use(this.config.uiPath, uiServer);
-        app.listen(this.config.port, () => {console.log(`open http://localhost:${this.config.port + this.config.uiPath}!`);});
+        app.use(this.config.uiPath, uiServer.uiMiddleware(app));
+        const httpServer = app.listen(this.config.port, () => {console.log(`open http://localhost:${this.config.port + this.config.uiPath}!`);});
+        uiServer.startWebSocket(httpServer);
+
     }
 }
 

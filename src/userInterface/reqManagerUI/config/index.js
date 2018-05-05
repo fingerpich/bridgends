@@ -3,11 +3,10 @@
 // see http://vuejs-templates.github.io/webpack for documentation.
 
 const path = require('path')
-const config = require('../../../../config.js');
+const config = require('../../../../config.js')
 const proxyTable = {};
-proxyTable[config.uiPath] = {
-  target: 'http://localhost:' + config.port + '/'
-};
+proxyTable[config.uiPath] = { target: 'http://localhost:' + config.port };
+proxyTable[config.socketPath] = { target: 'ws://localhost:' + config.port, ws: true};
 
 module.exports = {
   dev: {
@@ -15,9 +14,7 @@ module.exports = {
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {
-      ...proxyTable
-    },
+    proxyTable,
 
     // Various Dev Server settings
     host: 'localhost', // can be overwritten by process.env.HOST
