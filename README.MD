@@ -19,6 +19,7 @@ What Bridgends do
  - Responds the same request respond if it didn't cached before
  - Makes you be able to change behave of every request in its ui
  - It will show what browser or webpack proxy send to the server and what is respond.
+ - It can change the target for some of the requests so it will be able to centralize parallel API development
 
 ## install
 

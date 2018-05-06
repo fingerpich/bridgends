@@ -11,6 +11,7 @@ const state = {
 // getters
 const getters = {
   allRequests: state => state.requests,
+  selectedRequest: state => state.selectedReq,
 }
 
 // actions
@@ -23,6 +24,9 @@ const actions = {
   },
   sendMessage ({dispatch, commit}, message) {
     dispatch('newMessage', message);
+  },
+  setSelectedRequest({dispatch, commit}, req) {
+    commit('setSelectedReq', req);
   }
 }
 // mutations are operations that actually mutates the state.
@@ -38,6 +42,9 @@ const processReq = (req) => {
 };
 
 const mutations = {
+  setSelectedReq (state, req) {
+    state.selectedReq = req;
+  },
   SOCKET_CONNECT (state,  status ) {
     state.connectionStatus = status;
     console.log("user is connected");
@@ -48,18 +55,20 @@ const mutations = {
     state.requests = reqs.map(processReq);
   },
   SOCKET_UPDATE (state, data) {
-    const updated = JSON.parse(data[0]);
+    const changedReq = JSON.parse(data[0]);
     let matchReq = state.requests.filter(r => {
-      return r.req.url === updated.req.url;
+      return r.req.url === changedReq.req.url;
     });
     if (matchReq.length) {
       matchReq = matchReq[0];
-      matchReq = Object.assign(matchReq, processReq(updated));
+      matchReq = Object.assign(matchReq, processReq(changedReq));
       if(!matchReq.updateTime) matchReq.updateTime = 0;
       matchReq.updateTime++;
       setTimeout(()=> {
         matchReq.updateTime--;
       },300);
+    } else {
+      state.requests.push(processReq(changedReq));
     }
   }
 }

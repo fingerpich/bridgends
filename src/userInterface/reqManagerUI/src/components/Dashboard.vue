@@ -1,21 +1,40 @@
 <template>
-  <div class="hello">
+  <div class="dashboard">
     <h1>Bridgends</h1>
-    <el-table :data="reqList" style="width: 100%" :row-class-name="tableRowClassName">
-      <el-table-column prop="status" label="status" width="180"></el-table-column>
-      <el-table-column prop="formatedDate" label="Date" width="180"></el-table-column>
-      <el-table-column prop="freq" label="Frequency" width="180"></el-table-column>
-      <el-table-column prop="req.baseUrl" label="url"></el-table-column>
-    </el-table>
+    <div class="container">
+      <request-selector></request-selector>
+      <div v-if="selectedReq">
+        <h2>bridgends s</h2>
+
+        <div v-if="selectedReq.mockID"> mock with this id {{selectedReq.mockID}} </div>
+        <button v-else> add mock </button>
+
+        <div v-if="selectedReq.cacheID">
+          it has been cached {{selectedReq.cacheID}}
+        </div>
+      </div>
+      <div v-if="selectedReq">
+        <h3>Server</h3>
+        <div>
+          <p>
+            <strong>{{ selectedReq.req.baseUrl }}</strong>
+            <small>{{ selectedReq.req.params }}</small>
+          </p>
+
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
   import { mapGetters } from 'vuex'
+  import RequestSelector from "./reqSelector";
 export default {
   name: 'Dashboard',
+  components: {RequestSelector},
   computed: mapGetters({
-    reqList: 'allRequests',
+    selectedReq: 'selectedRequest',
   }),
   created () {},
   data () {
@@ -23,30 +42,18 @@ export default {
     }
   },
   methods: {
-    tableRowClassName({row, rowIndex}) {
-      return (row.updateTime>0) ? 'flash' : '';
-    }
+
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss">
-.el-table th{
-  text-align: center;
+.container{
+  display: flex;
+  >div {
+    flex: 33%;
+  }
 }
-
-@mixin keyframes($name) {
-  @-webkit-keyframes #{$name} { @content; }
-  @-moz-keyframes #{$name} { @content; }
-  @-ms-keyframes #{$name} { @content; }
-  @keyframes #{$name} { @content; }
-}
-@include keyframes(flash) {
-  0% { background-color: #ffccf2; }
-  50% { background-color: #ccffcc; }
-  100% { background-color: #ccffff; }
-}
-
 
 </style>
