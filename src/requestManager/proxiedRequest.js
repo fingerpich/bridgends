@@ -10,9 +10,11 @@ class ProxiedRequest {
     serialize () {
         return {
             req: this.req,
-            usedDates: this.usedDates,
             status: this.status,
-            respondedBy : this.respondedBy
+            usedDates: this.usedDates,
+            respondedBy : this.respondedBy,
+            cacheID : this.cacheID,
+            mockID : this.mockID
         }
     }
 

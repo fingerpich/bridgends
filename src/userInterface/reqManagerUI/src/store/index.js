@@ -1,7 +1,7 @@
 import config from '../../../../../config.js'
 import Vue from 'vue'
 import Vuex from 'vuex'
-import createPersistedState from 'vuex-persistedstate'
+// import createPersistedState from 'vuex-persistedstate'
 import VueSocketio from 'vue-socket.io';
 import socketio from 'socket.io-client';
 
@@ -11,7 +11,7 @@ Vue.use(Vuex)
 
 
 const store = new Vuex.Store({
-  plugins: [createPersistedState()],
+  // plugins: [createPersistedState()],
   modules: {
     requests
   }

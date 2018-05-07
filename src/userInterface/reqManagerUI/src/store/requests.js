@@ -6,12 +6,15 @@ import moment from 'jalali-moment';
 // each Vuex instance is just a single state tree.
 const state = {
   requests: [],
+  selectedReq: null,
+  respondWay: '',
 }
 
 // getters
 const getters = {
   allRequests: state => state.requests,
   selectedRequest: state => state.selectedReq,
+  respondWay: state => state.respondWay,
 }
 
 // actions
@@ -42,8 +45,27 @@ const processReq = (req) => {
 };
 
 const mutations = {
+  reorderRespondList (state, list) {
+    state.selectedReq.priorities = list;
+  },
+  updateRespondWay(state, choosenRespondWay) {
+    state.respondWay = choosenRespondWay;
+  },
   setSelectedReq (state, req) {
-    state.selectedReq = req;
+    if (req) {
+      if (!req.priorities) {
+        req.priorities = [];
+        if (req.cacheID) {
+          req.priorities.push('cache');
+        }
+        if (req.mockID) {
+          req.priorities.push('mock');
+        }
+        req.priorities.push('API');
+      }
+      state.respondWay = req.priorities[0];
+      state.selectedReq = req;
+    }
   },
   SOCKET_CONNECT (state,  status ) {
     state.connectionStatus = status;

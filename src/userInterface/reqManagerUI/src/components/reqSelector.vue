@@ -2,10 +2,10 @@
   <div class="requestSelector">
     <el-table :data="reqList"  :default-sort = "{prop: 'req.baseUrl', order: 'descending'}"
               highlight-current-row @current-change="handleCurrentChange" style="width: 100%" :row-class-name="tableRowClassName">
+      <el-table-column width="240" sortable prop="req.baseUrl" label="url"></el-table-column>
       <el-table-column sortable prop="status" label="status"></el-table-column>
       <el-table-column sortable prop="formatedDate" label="Date"></el-table-column>
       <el-table-column sortable prop="freq" label="Frequency"></el-table-column>
-      <el-table-column sortable prop="req.baseUrl" label="url"></el-table-column>
     </el-table>
   </div>
 </template>
@@ -38,6 +38,10 @@ export default {
 <style lang="scss">
 .el-table th{
   text-align: center;
+  padding: 0;
+}
+.cell{
+  padding: 0!important;
 }
 
 @mixin keyframes($name) {
