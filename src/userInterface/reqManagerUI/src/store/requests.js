@@ -1,20 +1,29 @@
 import axios from 'axios'
 import config from '../../../../../config.js';
 import moment from 'jalali-moment';
+import RespondType from "../../../../requestManager/respondType.js"
 
 // root state object.
 // each Vuex instance is just a single state tree.
 const state = {
   requests: [],
   selectedReq: null,
-  respondWay: '',
 }
 
 // getters
 const getters = {
   allRequests: state => state.requests,
   selectedRequest: state => state.selectedReq,
-  respondWay: state => state.respondWay,
+  getMocks: state => state.selectedReq.respondOptions.filter(res => res.type === RespondType.MOCK),
+  getCache: state => state.selectedReq.respondOptions.filter(res => res.type === RespondType.CACHE)[0],
+  getAPIs: state => state.selectedReq.respondOptions.filter(res => res.type === RespondType.API),
+  targetOptions: state =>  [
+    {label:'165.1654.1654.21', value: 'http://231.21621.23152.231'},
+    {label:'165.21.66.216', value: 'http://231.21621.23152.321'}
+  ],
+  respondWay: state => state.selectedReq.respondWay,
+  respondOptions: state => state.selectedReq.respondOptions,
+  alternativeOptions: state => state.selectedReq.respondOptions.filter(o => o !== state.selectedReq.respondWay),
 }
 
 // actions
@@ -45,25 +54,24 @@ const processReq = (req) => {
 };
 
 const mutations = {
-  reorderRespondList (state, list) {
-    state.selectedReq.priorities = list;
+  updateAlternativeWay(state, choosenWay) {
+    state.selectedReq = {...state.selectedReq};
+    state.selectedReq.respondWay.alternativeWay = choosenWay;
+  },
+  updateApiTarget(state, target) {
+    state.selectedReq = {...state.selectedReq};
+    state.selectedReq.respondWay.target = target;
   },
   updateRespondWay(state, choosenRespondWay) {
-    state.respondWay = choosenRespondWay;
+    state.selectedReq = {...state.selectedReq, respondWay: choosenRespondWay};
+  },
+  addNewRespondWay(state, newWay) {
+    newWay = {};
+    state.selectedReq.respondOptions.push(newWay);
+    state.selectedReq.respondWay = newWay;
   },
   setSelectedReq (state, req) {
     if (req) {
-      if (!req.priorities) {
-        req.priorities = [];
-        if (req.cacheID) {
-          req.priorities.push('cache');
-        }
-        if (req.mockID) {
-          req.priorities.push('mock');
-        }
-        req.priorities.push('API');
-      }
-      state.respondWay = req.priorities[0];
       state.selectedReq = req;
     }
   },

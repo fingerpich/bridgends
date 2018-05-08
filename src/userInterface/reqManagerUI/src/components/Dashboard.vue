@@ -6,45 +6,51 @@
 
     <div class="container">
       <request-selector></request-selector>
-      <div>
       <div v-if="selectedReq">
-        <h3>
-          Respond With
-          <el-button type="primary" icon="el-icon-plus" circle></el-button>
-        </h3>
-        <draggable v-on:choose="onChoose" v-model="priorities" :options="{draggable:'.item'}">
-          <div v-for="element in priorities" :key="element" class="item">
-            {{element}}
-          </div>
-        </draggable>
-
-        <div class="respondWith" v-if="showWayToRespond === 'mock'">
-          <!--<h4>mock</h4>-->
-          <div v-if="selectedReq.mockID"> mock with this id {{selectedReq.mockID}} </div>
-          <!--<el-button v-else type="primary">respond mock</el-button>-->
+        <h3>Respond With</h3>
+        <div class="selectRespondWay">
+          <el-radio v-for="opt in respondWays" v-model="respondWay" :key="opt" :value="opt" :label="opt" border></el-radio>
         </div>
-        <div class="respondWith" v-if="showWayToRespond === 'cache'">
+        <div class="respondWith" v-if="respondWay.type === RespondType.MOCK">
+          <div v-if="selectedReq.mockID"> mock with this id {{selectedReq.mockID}} </div>
+          <el-button icon="el-icon-plus" circle @click="dialogTableVisible = true">add mock</el-button>
+        </div>
+        <div class="respondWith" v-if="respondWay.type === RespondType.CACHE">
           <!--<h4>cache</h4>-->
           <div v-if="selectedReq.cacheID">
-            It has been cached {{selectedReq.cacheID}}
+            <h5>It will response via cache </h5>
+            <small>{{selectedReq.cacheID}}</small>
           </div>
         </div>
-        <div class="respondWith" v-if="showWayToRespond === 'API'">
+        <div class="respondWith" v-if="respondWay.type === RespondType.API">
           <h4>API</h4>
-          <el-select v-model="selectedTarget" placeholder="Select">
-            <el-option v-for="item in options"
-                       :key="item.value" :label="item.label" :value="item.value">
-            </el-option>
-          </el-select>
-          <el-button type="primary">test</el-button>
-          <p>
-            <strong>{{ selectedReq.req.baseUrl }}</strong>
-            <small>{{ selectedReq.req.params }}</small>
-          </p>
-          <p> status : {{ selectedReq.status}}</p>
-
+          <api-check></api-check>
+          <handle-api-fail></handle-api-fail>
         </div>
-      </div>
+
+        <el-dialog title="Add new respond way" :visible.sync="dialogTableVisible">
+          <el-select v-model="newWay.type" placeholder="Respond with">
+            <el-option key="API" value="API" label="API">API</el-option>
+            <el-option key="Mock" value="Mock" label="Mock">Mock</el-option>
+          </el-select>
+
+          <el-input placeholder="enterName" v-model="newWay.name">
+            <template slot="prepend">{{newWay.type}}</template>
+          </el-input>
+
+          <div v-show="newWay.type==='API'">
+            <api-check></api-check>
+            <handle-api-fail></handle-api-fail>
+          </div>
+          <div v-show="newWay.type==='Mock'">
+            <el-input
+              type="textarea"
+              :rows="2"
+              placeholder="Please input"
+              v-model="newWay.mock">
+            </el-input>
+          </div>
+        </el-dialog>
       </div>
     </div>
   </div>
@@ -52,35 +58,39 @@
 
 <script>
   import { mapGetters } from 'vuex'
+  import RespondType from "../../../../requestManager/respondType.js"
   import RequestSelector from "./reqSelector";
-  import draggable from 'vuedraggable'
+  import ApiCheck from "./ApiTester";
+  import HandleApiFail from "./ApiFaulure";
+
   export default {
     name: 'Dashboard',
-    components: {RequestSelector, draggable},
+    components: {HandleApiFail, ApiCheck, RequestSelector},
     computed: {
       selectedReq() {
         return this.$store.getters.selectedRequest;
       },
-      showWayToRespond () {
-        return this.$store.getters.respondWay;
+      respondOptions() {
+        return this.$store.getters.respondOptions;
       },
-      priorities: {
-        get() {
-          return this.$store.getters.selectedRequest.priorities;
+      respondWay: {
+        get: function () {
+          return this.$store.getters.selectedRequest.respondWay.type;
         },
-        set(list) {
-          this.$store.commit('reorderRespondList', list)
+        set: function (value) {
+          return this.$store.commit('updateRespondWay', value);
         }
-      }
+      },
     },
     created () {},
     data () {
       return {
-        options: [
-          {label:'165.1654.1654.21', value: 'http://231.21621.23152.231'},
-          {label:'165.21.66.216', value: 'http://231.21621.23152.321'}
-        ],
-        selectedTarget: 'http://231.21621.23152.321',
+        respondWays:['Mock','Cache','API'],
+        dialogTableVisible: false,
+        newWay: {
+          type: ''
+        },
+        RespondType: RespondType
       }
     },
     methods: {

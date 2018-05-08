@@ -1,7 +1,8 @@
+const RespondTypes = require('./respondType.js');
 const getRequestResult = require('./helpers/getRestResult.js');
 const urlFixer = require('./helpers/urlFixer.js');
 const cache = require('./cacheResponds/cache.js');
-const faker = require('./fakeApi/faker.js');
+const mock = require('./mock/mock.js');
 const express = require('express');
 const uiServer = require('./userInterface/uiServer.js');
 const request = require('request');
@@ -14,20 +15,23 @@ class Bridgends {
         const requested = reqManager.accessed(req);
         uiServer.broadCast(requested.serialize());
 
-        this.apiPromise = this._sendRequestToApi(req).then((parsedResp) => {
-            requested.checkAndSerializeDataToCache(parsedResp).then((data) => {
-                cache.saveRequest(data);
+        let apiURL = urlFixer.replaceRemoteAddress(req.url, requested.selectedTarget);
+        apiURL = this.config.replace ? this.config.replace(apiURL) : apiURL || apiURL;
+        this.apiPromise = getRequestResult(req.pipe(request(apiURL)))
+            .then((parsedResp) => {
+                requested.checkAndSerializeDataToCache(parsedResp).then((data) => {
+                    cache.saveRequest(data);
+                });
+                uiServer.broadCast(requested.serialize());
+                return parsedResp;
             });
-            uiServer.broadCast(requested.serialize());
-            return parsedResp;
-        });
 
-        requested.getRespondSetting()
-            .then(options => {
-                switch (options.responder) {
-                    case 'fake': return Promise.resolve(faker.respond(options.fakeID));
-                    case 'cache': return Promise.resolve(cache.respond(options.cacheID));
-                    case 'api': return this.apiPromise;
+        requested.getRespondWay()
+            .then(respondWay => {
+                switch (respondWay.type) {
+                    case RespondTypes.MOCK: return Promise.resolve(mock.respond(respondWay.mockID));
+                    case RespondTypes.CACHE: return Promise.resolve(cache.respond(respondWay.cacheID));
+                    case RespondTypes.API: return this.apiPromise;
                 }
             })
             .then((data) => {
@@ -41,13 +45,6 @@ class Bridgends {
             });
     }
 
-    _sendRequestToApi (req) {
-        let apiURL = urlFixer.replaceRemoteAddress(req.url, this.config.target);
-        apiURL = this.config.replace ? this.config.replace(apiURL) : apiURL || apiURL;
-        const apiRequest = req.pipe(request(apiURL));
-        return getRequestResult(apiRequest);
-    }
-
     start (config) {
         const defaultConfig = {
             apiPath:'/api',
@@ -58,7 +55,7 @@ class Bridgends {
         this.config = {...defaultConfig, ...config};
         const app = express();
 
-        faker.start({ dir: this.config.saveDir});
+        mock.start({ dir: this.config.saveDir});
         cache.start({ dir: this.config.saveDir});
         reqManager.start({ dir: this.config.saveDir});
         app.use(this.config.apiPath, this._cacheMiddleWare.bind(this));

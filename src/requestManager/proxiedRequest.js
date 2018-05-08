@@ -1,5 +1,7 @@
 const getRawBody = require('raw-body');
 let cacheIDCounter = 111;
+const config = require('../../config.js');
+const RespondTypes = require('./respondType.js');
 
 class ProxiedRequest {
     constructor (req) {
@@ -14,6 +16,8 @@ class ProxiedRequest {
             usedDates: this.usedDates,
             respondedBy : this.respondedBy,
             cacheID : this.cacheID,
+            respondOptions : this.respondOptions,
+            respondWay : this.respondWay,
             mockID : this.mockID
         }
     }
@@ -28,19 +32,8 @@ class ProxiedRequest {
         this.respond = respond;
     }
 
-    getRespondSetting() {
-        return new Promise((resolve, reject) => {
-            if (this.fake) {
-                this.respondedBy = 'fake';
-                return resolve({responder:'fake', fakeID: this.fakeID});
-            } else if (this.cache) {
-                this.respondedBy = 'cache';
-                return resolve({responder:'cache', cacheID: this.cacheID});
-            } else {
-                this.respondedBy = 'api';
-                return resolve({responder:'api'});
-            }
-        });
+    getRespondWay() {
+        return Promise.resolve(this.respondWay);
     }
 
     requested (req) {
@@ -57,12 +50,23 @@ class ProxiedRequest {
                 console.log('Unhandled error in getRawBody', arguments);
             });
         }
+
+        if (!this.respondOptions) {
+            this.respondOptions = config.targets.map(target => [{type: RespondTypes.API, target: target}]);
+            this.selectedTarget = config.targets[0];
+        }
+        if (!this.respondWay) { this.respondWay = this.respondOptions[0]; }
+
         this.previousState = this.status;
         this.status = 0;
 
         this.usedDates.unshift(Date.now());
         if (this.usedDates.length > 10) this.usedDates.pop();
         this.lastUsed = this.usedDates[0];
+    }
+
+    addMock() {
+        this.respondOptions.push({type:RespondTypes.MOCK, MockID});
     }
 
     checkAndSerializeDataToCache (apiResponded) {
@@ -74,10 +78,16 @@ class ProxiedRequest {
             this.status = apiResponded.statusCode;
             if (this.checkIsNotError) saveInCache = saveInCache && isRespondError;
             if (this.hasData) saveInCache = saveInCache && isRespondHasData;
+            this.targets = config.targets;
             if (saveInCache) {
-                const cacheID = this.cacheID || ++cacheIDCounter;
-                this.cacheID =  cacheID;
-                resolve({cacheID, ...apiResponded});
+                if (!this.cacheID) {
+                    this.cacheID = ++cacheIDCounter;
+                    // const caches = this.respondOptions.filter(option => option.type === RespondTypes.CACHE);
+                    const cacheRespond = {type: RespondTypes.CACHE, cacheID: this.cacheID};
+                    this.respondOptions.push(cacheRespond);
+                    this.respondWay = cacheRespond;
+                }
+                resolve({cacheID: this.cacheID, ...apiResponded});
             } else reject('decided to not cache it');
         });
     }

@@ -1,4 +1,4 @@
-class FakeApi {
+class Mock {
     constructor () {
 
     }
@@ -24,4 +24,4 @@ class FakeApi {
         return req;
     }
 }
-module.exports = new FakeApi();
+module.exports = new Mock();

@@ -1,6 +1,7 @@
 module.exports = {
     apiPath: '/api',
-    target: 'http://192.168.82.198:81/api/',
+    targets: ['http://192.168.82.198:81/api/'],
+    firstCache: true,
     saveDir: './cache_api/',
     uiPath: '/reqManager',
     socketPath: '/ws1',
