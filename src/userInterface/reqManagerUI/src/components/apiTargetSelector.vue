@@ -1,28 +1,21 @@
 <template>
-  <div class="CheckAPI">
+  <div class="targetSelector">
     <el-select v-model="selectedTarget" placeholder="Select">
-      <el-option v-for="item in targetOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+      <el-option v-for="item in apis" :key="item.target" :label="item.target" :value="item.target"></el-option>
     </el-select>
-    <el-button>test</el-button>
-
-    <p>
-      <strong>{{ selectedReq.req.baseUrl }}</strong>
-      <small>{{ selectedReq.req.params }}</small>
-    </p>
-    <p> status : {{ selectedReq.status}}</p>
   </div>
 </template>
 
 <script>
   import { mapGetters } from 'vuex'
 export default {
-  name: 'apiCheck',
+  name: 'apiTargetSelector',
   computed: {
     selectedRequest() {
       return this.$store.getters.selectedRequest;
     },
-    targetOptions() {
-      return this.$store.getters.targetOptions;
+    apis() {
+      return this.$store.getters.getAPIs;
     },
     selectedTarget: {
       get: function () {

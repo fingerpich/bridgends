@@ -1,4 +1,4 @@
-const RespondTypes = require('./respondType.js');
+const RespondTypes = require('./requestManager/respondType.js');
 const getRequestResult = require('./helpers/getRestResult.js');
 const urlFixer = require('./helpers/urlFixer.js');
 const cache = require('./cacheResponds/cache.js');
@@ -29,8 +29,8 @@ class Bridgends {
         requested.getRespondWay()
             .then(respondWay => {
                 switch (respondWay.type) {
-                    case RespondTypes.MOCK: return Promise.resolve(mock.respond(respondWay.mockID));
-                    case RespondTypes.CACHE: return Promise.resolve(cache.respond(respondWay.cacheID));
+                    case RespondTypes.MOCK: return mock.respond(respondWay.mockID);
+                    case RespondTypes.CACHE: return cache.respond(respondWay.cacheID);
                     case RespondTypes.API: return this.apiPromise;
                 }
             })
@@ -42,17 +42,13 @@ class Bridgends {
                     res.end(data.body);
                 }
                 next();
+            }, (err) => {
+                console.error(err);
             });
     }
 
     start (config) {
-        const defaultConfig = {
-            apiPath:'/api',
-            port: 6464,
-            uiPath: '/reqManger',
-            saveDir:'cache_api/'
-        };
-        this.config = {...defaultConfig, ...config};
+        this.config = config;
         const app = express();
 
         mock.start({ dir: this.config.saveDir});

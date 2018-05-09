@@ -1,8 +1,8 @@
 <template>
   <div class="HandleApiFail">
     <div v-show="alternativeOptions.length > 0">
-      <label>If it could not answer respond with</label>
-      <el-select v-model="alternativeWay" placeholder="Select">
+      <p><small>If it could not answer respond with</small></p>
+      <el-select v-model="alternativeWay" placeholder="on failure">
         <el-option v-for="item in alternativeOptions" v-if="item!==respondWay" :key="item" :label="item" :value="item"></el-option>
       </el-select>
     </div>

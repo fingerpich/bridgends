@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const router = express.Router();
 const reqManager = require('../requestManager/reqManager.js');
+const cache = require('../cacheResponds/cache.js');
 const http = require('http');
 // const WebSocket = require('ws');
 const io = require('socket.io');
@@ -37,6 +38,15 @@ class uiServer{
         router.get('/reqList', function (req, res) {
             res.send(JSON.stringify(reqManager.list));
         });
+
+        router.get('/getCacheContent', function (req, res) {
+            cache.respond(req.params.cacheID).then((jsonContent) => {
+                res.send(JSON.stringify(jsonContent));
+            },(error) => {
+                res.status(500).send(error);
+            });
+        });
+
         return router
     }
 }

@@ -14,9 +14,9 @@ class ProxiedRequest {
             req: this.req,
             status: this.status,
             usedDates: this.usedDates,
-            respondedBy : this.respondedBy,
             cacheID : this.cacheID,
             respondOptions : this.respondOptions,
+            selectedTarget : this.selectedTarget,
             respondWay : this.respondWay,
             mockID : this.mockID
         }
@@ -25,7 +25,7 @@ class ProxiedRequest {
     getState () {
         const s = this.serialize();
         s.respond = this.respond;
-        s.realRespond = this.realRespond;
+        s.apiRespond = this.apiRespond;
         return s;
     }
     respondWith (respond) {
@@ -52,10 +52,13 @@ class ProxiedRequest {
         }
 
         if (!this.respondOptions) {
-            this.respondOptions = config.targets.map(target => [{type: RespondTypes.API, target: target}]);
+            this.respondOptions = config.targets.map(target => {return {type: RespondTypes.API, target}});
             this.selectedTarget = config.targets[0];
         }
-        if (!this.respondWay) { this.respondWay = this.respondOptions[0]; }
+        if (!this.respondWay) {
+            this.respondWay = this.respondOptions[0];
+            this.respondWay.lastActivated = true;
+        }
 
         this.previousState = this.status;
         this.status = 0;
@@ -70,7 +73,7 @@ class ProxiedRequest {
     }
 
     checkAndSerializeDataToCache (apiResponded) {
-        this.realRespond = apiResponded;
+        this.apiRespond = apiResponded;
         return new Promise((resolve, reject) => {
             let saveInCache = true;
             const isRespondError = apiResponded.statusCode !== 200;

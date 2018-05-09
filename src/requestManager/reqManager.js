@@ -18,8 +18,7 @@ class RequestManager {
         try {
             data = fs.readFileSync(this.savePath, 'utf-8');
         } catch (e) {
-            console.log('error in reading ' + fileName + ' file');
-            console.log(e);
+            console.log(e.message);
         }
         if (data) {
             const parsed = JSON.parse(data);

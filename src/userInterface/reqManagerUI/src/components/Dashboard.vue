@@ -6,50 +6,39 @@
 
     <div class="container">
       <request-selector></request-selector>
-      <div v-if="selectedReq">
+      <div class="respondContainer" v-if="selectedRequest">
         <h3>Respond With</h3>
         <div class="selectRespondWay">
-          <el-radio v-for="opt in respondWays" v-model="respondWay" :key="opt" :value="opt" :label="opt" border></el-radio>
+          <el-radio v-for="opt in respondWays" v-model="respondWayType" :key="opt" :value="opt" :label="opt" border></el-radio>
         </div>
-        <div class="respondWith" v-if="respondWay.type === RespondType.MOCK">
-          <div v-if="selectedReq.mockID"> mock with this id {{selectedReq.mockID}} </div>
+        <div class="respondWith" v-if="respondWayType === RespondType.MOCK">
+          <div v-if="selectedRequest.mockID"> mock with this id {{selectedRequest.mockID}} </div>
           <el-button icon="el-icon-plus" circle @click="dialogTableVisible = true">add mock</el-button>
         </div>
-        <div class="respondWith" v-if="respondWay.type === RespondType.CACHE">
+        <div class="respondWith" v-if="respondWayType === RespondType.CACHE">
           <!--<h4>cache</h4>-->
-          <div v-if="selectedReq.cacheID">
+          <div v-if="selectedRequest.cacheID">
             <h5>It will response via cache </h5>
-            <small>{{selectedReq.cacheID}}</small>
+            <long-text :text="selectedRequest.cacheContent"></long-text>
+            <small>{{selectedRequest.cacheID}}</small>
           </div>
         </div>
-        <div class="respondWith" v-if="respondWay.type === RespondType.API">
+        <div class="respondWith" v-if="respondWayType === RespondType.API">
           <h4>API</h4>
+          <api-target-selector></api-target-selector>
           <api-check></api-check>
-          <handle-api-fail></handle-api-fail>
+          <!--<handle-api-fail></handle-api-fail>-->
+          <!--<label>add another api option</label>-->
+          <!--<el-button icon="el-icon-plus"></el-button>-->
         </div>
 
-        <el-dialog title="Add new respond way" :visible.sync="dialogTableVisible">
-          <el-select v-model="newWay.type" placeholder="Respond with">
-            <el-option key="API" value="API" label="API">API</el-option>
-            <el-option key="Mock" value="Mock" label="Mock">Mock</el-option>
-          </el-select>
-
-          <el-input placeholder="enterName" v-model="newWay.name">
-            <template slot="prepend">{{newWay.type}}</template>
+        <el-dialog title="Add new mock" :visible.sync="dialogTableVisible">
+          <el-input placeholder="enterName" v-model="newMock.name"></el-input>
+          <el-input
+            type="textarea"
+            placeholder="respond"
+            v-model="newMock.mock">
           </el-input>
-
-          <div v-show="newWay.type==='API'">
-            <api-check></api-check>
-            <handle-api-fail></handle-api-fail>
-          </div>
-          <div v-show="newWay.type==='Mock'">
-            <el-input
-              type="textarea"
-              :rows="2"
-              placeholder="Please input"
-              v-model="newWay.mock">
-            </el-input>
-          </div>
         </el-dialog>
       </div>
     </div>
@@ -58,44 +47,70 @@
 
 <script>
   import { mapGetters } from 'vuex'
+  import axios from 'axios'
   import RespondType from "../../../../requestManager/respondType.js"
   import RequestSelector from "./reqSelector";
-  import ApiCheck from "./ApiTester";
   import HandleApiFail from "./ApiFaulure";
+  import ApiCheck from "./ApiCheck";
+  import ApiTargetSelector from "./apiTargetSelector";
+  import LongText from "./longText";
 
   export default {
     name: 'Dashboard',
-    components: {HandleApiFail, ApiCheck, RequestSelector},
+    components: {LongText, ApiTargetSelector, ApiCheck, HandleApiFail, RequestSelector},
     computed: {
-      selectedReq() {
-        return this.$store.getters.selectedRequest;
+      selectedRequest() {
+        const sr = this.$store.getters.selectedRequest;
+        if (sr) {
+          this.respondW = this.respondWay;
+        }
+        return sr;
       },
       respondOptions() {
         return this.$store.getters.respondOptions;
+      },
+      respondWayType: {
+        get: function () {
+          return this.respondW;
+        },
+        set: function (value) {
+          this.respondW = value;
+          if (value === RespondType.CACHE) {
+            if(this.selectedRequest.cacheID && !this.selectedRequest.cacheContent) {
+              axios.get('/getCacheContent').then(content => {
+                this.$store.commit('setCacheContent', content);
+              })
+            }
+          }
+          this.$store.commit('updateRespondWay', value);
+        }
       },
       respondWay: {
         get: function () {
           return this.$store.getters.selectedRequest.respondWay.type;
         },
         set: function (value) {
-          return this.$store.commit('updateRespondWay', value);
+          this.$store.commit('updateRespondWay', value);
         }
       },
     },
-    created () {},
+    created () {
+      this.respondW = this.respondWay.type;
+    },
     data () {
       return {
-        respondWays:['Mock','Cache','API'],
+        respondWays:[RespondType.MOCK,RespondType.CACHE,RespondType.API],
         dialogTableVisible: false,
-        newWay: {
+        newMock: {
           type: ''
         },
+        respondW: RespondType.API,
         RespondType: RespondType
       }
     },
     methods: {
       onChoose (ev) {
-        this.$store.commit('updateRespondWay', this.selectedReq.priorities[ev.oldIndex]);
+        this.$store.commit('updateRespondWay', this.selectedRequest.priorities[ev.oldIndex]);
       }
     }
   }
@@ -113,8 +128,13 @@
   }
   .container{
     display: flex;
-    >div{
-      flex:50%;
+    .requestSelector{
+      flex:60%;
+      width:60%;
+    }
+    .respondContainer{
+      flex:40%;
+      width:40%;
     }
     .respondWith {
       padding: 10px;

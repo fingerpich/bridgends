@@ -14,9 +14,10 @@ const state = {
 const getters = {
   allRequests: state => state.requests,
   selectedRequest: state => state.selectedReq,
-  getMocks: state => state.selectedReq.respondOptions.filter(res => res.type === RespondType.MOCK),
-  getCache: state => state.selectedReq.respondOptions.filter(res => res.type === RespondType.CACHE)[0],
-  getAPIs: state => state.selectedReq.respondOptions.filter(res => res.type === RespondType.API),
+  getType: (state, type) => state.selectedReq.respondOptions.filter(res => res.type === type),
+  getMocks: state => getters.getType(state,RespondType.MOCK),
+  getCache: state => getters.getType(state,RespondType.CACHE)[0],
+  getAPIs: state => getters.getType(state,RespondType.API),
   targetOptions: state =>  [
     {label:'165.1654.1654.21', value: 'http://231.21621.23152.231'},
     {label:'165.21.66.216', value: 'http://231.21621.23152.321'}
@@ -58,12 +59,22 @@ const mutations = {
     state.selectedReq = {...state.selectedReq};
     state.selectedReq.respondWay.alternativeWay = choosenWay;
   },
+  setCacheContent(state, content) {
+    state.selectedReq = {...state.selectedReq};
+    state.selectedReq.cacheContent = content;
+  },
   updateApiTarget(state, target) {
     state.selectedReq = {...state.selectedReq};
     state.selectedReq.respondWay.target = target;
   },
-  updateRespondWay(state, choosenRespondWay) {
-    state.selectedReq = {...state.selectedReq, respondWay: choosenRespondWay};
+  updateRespondWay(state, choosenRespondWayType) {
+    let typeOptions = getters.getType(state, choosenRespondWayType)
+    if (typeOptions.length > 1) {
+      typeOptions = typeOptions.filter(ro => ro.lastActivated)
+    }
+    if (typeOptions.length) {
+      state.selectedReq = {...state.selectedReq, respondWay: typeOptions[0]};
+    }
   },
   addNewRespondWay(state, newWay) {
     newWay = {};

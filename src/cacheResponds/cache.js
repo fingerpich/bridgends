@@ -1,4 +1,5 @@
 const filendir = require('filendir');
+const fs = require('fs');
 const path = require('path');
 
 class CacheResponds {
@@ -30,9 +31,18 @@ class CacheResponds {
             const filePath = this._getFileName(cacheID);
             try {
                 fs.readFile(filePath, 'utf-8', (err, data) => {
-                    if (err) reject('')
+                    if (err) {
+                        reject(err.message);
+                    }
+                    else {
+                        try {
+                            const cached = JSON.parse(data);
+                            resolve(cached);
+                        } catch (e) {
+                            reject(e.message);
+                        }
+                    }
                 });
-                resolve(data);
             } catch(e) {
                 reject(e);
             }
@@ -40,7 +50,7 @@ class CacheResponds {
     }
 
     _getFileName (cacheID) {
-        return path.resolve(this.savePath, cacheID + '.tmp')
+        return path.join(this.savePath, cacheID + '.tmp')
     }
 }
 module.exports = new CacheResponds();
