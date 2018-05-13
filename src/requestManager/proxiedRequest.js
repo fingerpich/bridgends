@@ -1,4 +1,5 @@
 const getRawBody = require('raw-body');
+const urlFixer = require('../helpers/urlFixer.js');
 let cacheIDCounter = 111;
 const config = require('../../config.js');
 const RespondTypes = require('./respondType.js');
@@ -9,6 +10,9 @@ class ProxiedRequest {
         if (req) { Object.assign(this, req); }
     }
 
+    match (url) {
+        return this.req.url === url
+    }
     serialize () {
         return {
             req: this.req,
@@ -36,9 +40,18 @@ class ProxiedRequest {
         return Promise.resolve(this.respondWay);
     }
 
+    getSelectedTarget () {
+        return this.selectedTarget;
+    }
+    getTargetUrl () {
+        return urlFixer.replaceRemoteAddress(this.req.url, this.selectedTarget);
+    }
+
     requested (req) {
         this.req = {
             url: req.url,
+            headers: req.headers,
+            method: req.method,
             baseUrl: req.url.split('?')[0],
             params: req.url.split('?')[1]
         };

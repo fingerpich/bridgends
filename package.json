@@ -10,8 +10,10 @@
   "author": "Mojtaba Zarei(fingerpich)",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.18.0",
     "express": "^4.16.3",
     "filendir": "^1.0.1",
+    "http-proxy-middleware": "^0.18.0",
     "raw-body": "^2.3.2",
     "request": "^2.85.0",
     "socket.io": "^2.1.0",
