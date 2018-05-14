@@ -2,7 +2,7 @@ const filendir = require('filendir');
 const fs = require('fs');
 const path = require('path');
 
-class CacheResponds {
+class FileResponds {
     constructor () {
 
     }
@@ -11,9 +11,9 @@ class CacheResponds {
         this.savePath = dir;
     }
 
-    saveRequest (envelope) {
-        const filePath = this._getFileName(envelope.cacheID);
-        filendir.writeFile(filePath, JSON.stringify(envelope), function (err) {
+    save (data, name) {
+        const filePath = this._getFileName(name);
+        filendir.writeFile(filePath, JSON.stringify(data), function (err) {
             if (err) {
                 log('File could not be saved in ' + this.savePath);
                 throw err
@@ -21,36 +21,37 @@ class CacheResponds {
         }.bind(this));
     }
 
-    has (cacheID) {
-        const filePath = this._getFileName(cacheID);
+    has (name) {
+        const filePath = this._getFileName(name);
         return fs.existsSync(filePath);
     }
 
-    respond (cacheID) {
+    load (name) {
         return new Promise((resolve, reject) => {
-            const filePath = this._getFileName(cacheID);
+            const filePath = this._getFileName(name);
             try {
                 fs.readFile(filePath, 'utf-8', (err, data) => {
                     if (err) {
-                        reject(err.message);
+                        console.log(err.message);
                     }
                     else {
                         try {
                             const cached = JSON.parse(data);
                             resolve(cached);
                         } catch (e) {
-                            reject(e.message);
+                            console.log(e.message);
                         }
                     }
                 });
             } catch(e) {
-                reject(e);
+                console.log(e);
             }
         });
     }
 
-    _getFileName (cacheID) {
-        return path.join(this.savePath, cacheID + '.tmp')
+    _getFileName (name) {
+        return path.join(this.savePath, name + '.tmp')
     }
 }
-module.exports = new CacheResponds();
+
+module.exports = new FileResponds();

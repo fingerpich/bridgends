@@ -2,9 +2,6 @@ const express = require('express');
 const path = require('path');
 const router = express.Router();
 const reqManager = require('../requestManager/reqManager.js');
-const cache = require('../cacheResponds/cache.js');
-const http = require('http');
-// const WebSocket = require('ws');
 const io = require('socket.io');
 const config = require('../../config.js');
 
@@ -18,7 +15,35 @@ class uiServer{
             .on('connection', (ws) => {
                 const ip = ws.handshake.headers.host;
                 console.log("user " + ip + " connected");
-                ws.emit('list', reqManager.getRequestsStates());
+                ws.emit('list', reqManager.serialize());
+                ws.on('testApi', (url) => {
+                    reqManager.testAPI(url).then((res) => {
+                        ws.emit('update', res);
+                    });
+                });
+                ws.on('changeRespondWay', ({url, respondWay}) => {
+                    const req = reqManager._getMatchRequest(url);
+                    req.setRespondWay(respondWay).then((respond) => {
+                        const reqData = req.serialize();
+                        reqData.respond = respond;
+                        this.broadCast(reqData);
+                    });
+
+                });
+
+                ws.on('addNewMock', ({url, newMock}) => {
+                    const req = reqManager._getMatchRequest(url);
+                    req.addMock(newMock);
+                });
+
+                ws.on('getRespond', function (url) {
+                    const req = reqManager._getMatchRequest(url);
+                    req.getRespond().then((content) => {
+                        content.url = url;
+                        content.respondWayType = req.respondWay.type;
+                        ws.emit('updateReq', content);
+                    });
+                });
             });
     }
 
@@ -32,19 +57,6 @@ class uiServer{
         // define the home page route
         router.get('/', function (req, res) {
             res.sendFile(uiPath + '/index.html');
-        });
-
-        // define the about route
-        router.get('/reqList', function (req, res) {
-            res.send(JSON.stringify(reqManager.list));
-        });
-
-        router.get('/getCacheContent', function (req, res) {
-            cache.respond(req.params.cacheID).then((jsonContent) => {
-                res.send(JSON.stringify(jsonContent));
-            },(error) => {
-                res.status(500).send(error);
-            });
         });
 
         return router

@@ -30,14 +30,17 @@ const getters = {
 // actions
 const actions = {
   loadRequests ({dispatch, commit}, options) {
-    // return axios.get(config.uiPath + '/reqList', {params: options}).then(res => {
-    //   commit('fillRequests', res.data)
-    // })
-    dispatch('sendMessage', 'getList')
+    this._vm.$socket.emit('getList', {});
   },
-  sendMessage ({dispatch, commit}, message) {
-    dispatch('newMessage', message);
+
+  changeRespondWayType (context, selectedWayType) {
+    if (getters.getType(context.state, selectedWayType).length) {
+      const respondWay = getters.getType(context.state, selectedWayType).filter(tway => tway.lastActivated)[0];
+      const data = {url: getters.selectedRequest(context.state).req.url, respondWay};
+      this._vm.$socket.emit('changeRespondWay', data);
+    }
   },
+
   setSelectedRequest({dispatch, commit}, req) {
     commit('setSelectedReq', req);
   }
@@ -58,10 +61,6 @@ const mutations = {
   updateAlternativeWay(state, choosenWay) {
     state.selectedReq = {...state.selectedReq};
     state.selectedReq.respondWay.alternativeWay = choosenWay;
-  },
-  setCacheContent(state, content) {
-    state.selectedReq = {...state.selectedReq};
-    state.selectedReq.cacheContent = content;
   },
   updateApiTarget(state, target) {
     state.selectedReq = {...state.selectedReq};
@@ -90,6 +89,11 @@ const mutations = {
     state.connectionStatus = status;
     console.log("user is connected");
   },
+  SOCKET_TEST_RESPONSE (state,  message) {
+    const resp = message[0];
+    console.log('we have got message of server in socket');
+    state.selectedReq.apiRespond = resp;
+  },
   SOCKET_LIST (state,  message) {
     const reqs = message[0];
     console.log('we have got message of server in socket');
@@ -102,6 +106,9 @@ const mutations = {
     });
     if (matchReq.length) {
       matchReq = matchReq[0];
+      if (state.selectedReq.req.url === matchReq.req.url) {
+        state.selectedReq = matchReq;
+      }
       matchReq = Object.assign(matchReq, processReq(changedReq));
       if(!matchReq.updateTime) matchReq.updateTime = 0;
       matchReq.updateTime++;

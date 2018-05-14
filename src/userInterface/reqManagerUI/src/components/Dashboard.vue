@@ -11,18 +11,19 @@
         <div class="selectRespondWay">
           <el-radio v-for="opt in respondWays" v-model="respondWayType" :key="opt" :value="opt" :label="opt" border></el-radio>
         </div>
+
+        <!--MOCK-->
         <div class="respondWith" v-if="respondWayType === RespondType.MOCK">
           <div v-if="selectedRequest.mockID"> mock with this id {{selectedRequest.mockID}} </div>
           <el-button icon="el-icon-plus" circle @click="dialogTableVisible = true">add mock</el-button>
         </div>
+
+        <!--CACHE-->
         <div class="respondWith" v-if="respondWayType === RespondType.CACHE">
-          <!--<h4>cache</h4>-->
-          <div v-if="selectedRequest.cacheID">
-            <h5>It will response via cache </h5>
-            <long-text :text="selectedRequest.cacheContent"></long-text>
-            <small>{{selectedRequest.cacheID}}</small>
-          </div>
+          <long-text :text="selectedRequest.respond && selectedRequest.respond.body"></long-text>
         </div>
+
+        <!--API-->
         <div class="respondWith" v-if="respondWayType === RespondType.API">
           <h4>API</h4>
           <api-target-selector></api-target-selector>
@@ -32,13 +33,35 @@
           <!--<el-button icon="el-icon-plus"></el-button>-->
         </div>
 
-        <el-dialog title="Add new mock" :visible.sync="dialogTableVisible">
-          <el-input placeholder="enterName" v-model="newMock.name"></el-input>
+        <el-dialog title="New Mock" :visible.sync="dialogTableVisible">
+          <el-row>
+            <el-col :span="12">
+              <el-input placeholder="enterName" v-model="newMock.name"></el-input>
+            </el-col>
+            <el-col :span="8">
+              <el-select v-model="newMock.status" placeholder="status">
+                <el-option v-for="item in httpStatus" :key="item" :label="item" :value="item" ></el-option>
+              </el-select>
+            </el-col>
+            <el-col :span="4">
+              <el-input
+                type="textarea"
+                placeholder="header"
+                v-model="newMock.header">
+              </el-input>
+            </el-col>
+          </el-row>
+
           <el-input
+            class="bodyTextArea"
             type="textarea"
-            placeholder="respond"
-            v-model="newMock.mock">
+            placeholder="body"
+            v-model="newMock.body">
           </el-input>
+          <h3>
+            <small>{{newMockError}}</small>
+          </h3>
+          <el-button type="success" v-on:click="saveNewMock">Save</el-button>
         </el-dialog>
       </div>
     </div>
@@ -75,14 +98,7 @@
         },
         set: function (value) {
           this.respondW = value;
-          if (value === RespondType.CACHE) {
-            if(this.selectedRequest.cacheID && !this.selectedRequest.cacheContent) {
-              axios.get('/getCacheContent').then(content => {
-                this.$store.commit('setCacheContent', content);
-              })
-            }
-          }
-          this.$store.commit('updateRespondWay', value);
+          this.$store.dispatch('changeRespondWayType', value);
         }
       },
       respondWay: {
@@ -94,23 +110,32 @@
         }
       },
     },
-    created () {
-      this.respondW = this.respondWay.type;
-    },
+    created () {},
     data () {
       return {
-        respondWays:[RespondType.MOCK,RespondType.CACHE,RespondType.API],
+        httpStatus: [200, 403, 400, 503],
+        respondWays: [RespondType.MOCK,RespondType.CACHE,RespondType.API],
         dialogTableVisible: false,
         newMock: {
-          type: ''
+          status: 200,
+          name: '',
+          body: '',
+          header: '',
         },
+        newMockError: '',
         respondW: RespondType.API,
         RespondType: RespondType
       }
     },
     methods: {
-      onChoose (ev) {
-        this.$store.commit('updateRespondWay', this.selectedRequest.priorities[ev.oldIndex]);
+      saveNewMock () {
+        if (!this.newMock.name) {
+          this.newMockError = 'please fill out name field(name and body is required)';
+        } else if (!this.newMock.body) {
+          this.newMockError = 'please fill out body field(name and body is required)';
+        } else {
+          this.$socket.emit('addNewMock', this.newMock);
+        }
       }
     }
   }
@@ -138,6 +163,11 @@
     }
     .respondWith {
       padding: 10px;
+    }
+  }
+  .bodyTextArea {
+    textarea {
+      min-height: 200px!important;
     }
   }
 

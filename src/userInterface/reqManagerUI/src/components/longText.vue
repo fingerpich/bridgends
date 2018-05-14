@@ -5,7 +5,6 @@
 </template>
 
 <script>
-  import { mapGetters } from 'vuex'
 export default {
   props:['text'],
   name: 'longText',
@@ -30,5 +29,8 @@ export default {
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 125px;
+  }
+  .el-loading-mask {
+    background: none;
   }
 </style>

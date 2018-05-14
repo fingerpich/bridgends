@@ -3,70 +3,77 @@ const urlFixer = require('../helpers/urlFixer.js');
 let cacheIDCounter = 111;
 const config = require('../../config.js');
 const RespondTypes = require('./respondType.js');
+const respondFile = require('../respondFiles/respondFile.js');
 
 class ProxiedRequest {
     constructor (req) {
         this.usedDates = [];
+        this.reqFileName = 0;
+
         if (req) { Object.assign(this, req); }
     }
 
-    match (url) {
+    matchUrl (url) {
         return this.req.url === url
     }
+
     serialize () {
         return {
             req: this.req,
             status: this.status,
             usedDates: this.usedDates,
-            cacheID : this.cacheID,
             respondOptions : this.respondOptions,
-            selectedTarget : this.selectedTarget,
             respondWay : this.respondWay,
-            mockID : this.mockID
         }
     }
 
-    getState () {
-        const s = this.serialize();
-        s.respond = this.respond;
-        s.apiRespond = this.apiRespond;
-        return s;
-    }
-    respondWith (respond) {
-        this.respond = respond;
+    getRespond () {
+        return respondFile.load(this.respondWay.file);
     }
 
+    setRespondWay (respondWay) {
+        this.respondWay = respondWay;
+        return respondFile
+            .load(this.respondWay.file)
+    }
     getRespondWay() {
-        return Promise.resolve(this.respondWay);
+        return this.respondWay;
     }
 
     getSelectedTarget () {
-        return this.selectedTarget;
+        return this.respondOptions.filter(ro => ro.type === RespondTypes.API && ro.lastActivated)[0].target;
     }
-    getTargetUrl () {
-        return urlFixer.replaceRemoteAddress(this.req.url, this.selectedTarget);
+
+    saveRequestData (req) {
+        if (!this.reqFileName){
+            this.reqFileName = this._getFileName();
+        }
+        const reqData = {
+            headers: req.headers
+        };
+        if (req.method !== 'GET') {
+            getRawBody(req).then((bodyBuffer) => {
+                reqData.reqBody = bodyBuffer.toString();
+                respondFile.save(reqData, this.reqFileName);
+            }, () => {
+                console.log('Unhandled error in getRawBody', arguments);
+            });
+        } else {
+            respondFile.save(reqData, this.reqFileName);
+        }
     }
 
     requested (req) {
         this.req = {
             url: req.url,
-            headers: req.headers,
             method: req.method,
             baseUrl: req.url.split('?')[0],
             params: req.url.split('?')[1]
         };
-
-        if (req.method !== 'GET') {
-            getRawBody(req).then((bodyBuffer) => {
-                this.req.reqBody = bodyBuffer.toString();
-            }, () => {
-                console.log('Unhandled error in getRawBody', arguments);
-            });
-        }
+        this.saveRequestData(req);
 
         if (!this.respondOptions) {
-            this.respondOptions = config.targets.map(target => {return {type: RespondTypes.API, target}});
-            this.selectedTarget = config.targets[0];
+            this.respondOptions = config.targets.map((target, i) => {return {type: RespondTypes.API, target, file: this._getFileName()}});
         }
         if (!this.respondWay) {
             this.respondWay = this.respondOptions[0];
@@ -81,31 +88,32 @@ class ProxiedRequest {
         this.lastUsed = this.usedDates[0];
     }
 
-    addMock() {
-        this.respondOptions.push({type:RespondTypes.MOCK, MockID});
+    addMock(mockData) {
+        const mockOption = {name: mockData.name, type: RespondTypes.MOCK, file: this._getFileName()};
+        this.respondOptions.push(mockOption);
+        mockData.name.delete();
+        respondFile.save(mockData, mockOption.file);
     }
 
-    checkAndSerializeDataToCache (apiResponded) {
-        this.apiRespond = apiResponded;
-        return new Promise((resolve, reject) => {
-            let saveInCache = true;
-            const isRespondError = apiResponded.statusCode !== 200;
-            const isRespondHasData = apiResponded.body;
-            this.status = apiResponded.statusCode;
-            if (this.checkIsNotError) saveInCache = saveInCache && isRespondError;
-            if (this.hasData) saveInCache = saveInCache && isRespondHasData;
-            this.targets = config.targets;
-            if (saveInCache) {
-                if (!this.cacheID) {
-                    this.cacheID = ++cacheIDCounter;
-                    // const caches = this.respondOptions.filter(option => option.type === RespondTypes.CACHE);
-                    const cacheRespond = {type: RespondTypes.CACHE, cacheID: this.cacheID};
-                    this.respondOptions.push(cacheRespond);
-                    this.respondWay = cacheRespond;
-                }
-                resolve({cacheID: this.cacheID, ...apiResponded});
-            } else reject('decided to not cache it');
-        });
+    _getFileName() {
+        return ++cacheIDCounter + '' + Date.now();
+    }
+
+    setResponse (apiResponded) {
+        const isRespondError = apiResponded.statusCode !== 200;
+        const isRespondHasData = apiResponded.body;
+        this.status = apiResponded.statusCode;
+        this.targets = config.targets;
+
+        respondFile.save(apiResponded, this.respondOptions.filter(ro => ro.target === this.getSelectedTarget())[0].file);
+        if (!isRespondError && isRespondHasData) {
+            if (!this.respondOptions.filter(ro => ro.type === RespondTypes.CACHE).length) {
+                const cacheRespond = {type: RespondTypes.CACHE, file: this._getFileName(), lastActivated: true};
+                this.respondOptions.push(cacheRespond);
+                this.respondWay = cacheRespond;
+                respondFile.save(apiResponded, cacheRespond.file);
+            }
+        }
     }
 }
 

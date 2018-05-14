@@ -1,7 +1,6 @@
 const RespondTypes = require('./requestManager/respondType.js');
 
-const cache = require('./cacheResponds/cache.js');
-const mock = require('./mock/mock.js');
+const respondFile = require('./respondFiles/respondFile.js');
 const express = require('express');
 const uiServer = require('./userInterface/uiServer.js');
 const proxy = require('http-proxy-middleware');
@@ -25,21 +24,19 @@ class Bridgends {
             },
             onProxyReq: (proxyReq, req, res) => {
                 const requested = reqManager._getMatchRequest(req.url);
-                uiServer.broadCast(requested.getState());
+                uiServer.broadCast(requested.serialize());
                 const respondBack = (data) => {
                     if (!res.headersSent) {
                         res.writeHead(data.statusCode, data.headers);
                         res.end(data.body);
                     }
                 };
-                requested.getRespondWay()
-                    .then(respondWay => {
-                        switch (respondWay.type) {
-                            case RespondTypes.MOCK: mock.respond(respondWay.mockID).then(respondBack); break;
-                            case RespondTypes.CACHE: cache.respond(respondWay.cacheID).then(respondBack); break;
-                            // case RespondTypes.API: return this.apiPromise;
-                        }
-                    })
+                const respondWay = requested.getRespondWay();
+                switch (respondWay.type) {
+                    case RespondTypes.MOCK: respondFile.load(respondWay.mockID).then(respondBack); break;
+                    case RespondTypes.CACHE: respondFile.load(respondWay.cacheID).then(respondBack); break;
+                    // case RespondTypes.API: return this.apiPromise;
+                }
             },
             onProxyRes: (proxyRes, req, res) => {
                 const requested = reqManager._getMatchRequest(req.url);
@@ -59,10 +56,8 @@ class Bridgends {
                         resTime: Date.now()
                     };
 
-                    if (envelope && requested.checkAndSerializeDataToCache(envelope)) {
-                        cache.saveRequest(envelope);
-                    }
-                    uiServer.broadCast(requested.getState());
+                    requested.setResponse(envelope);
+                    uiServer.broadCast(requested.serialize());
                 });
             }
         });
@@ -71,10 +66,8 @@ class Bridgends {
     start (config) {
         this.config = config;
         const app = express();
-
-        mock.start({ dir: this.config.saveDir});
-        cache.start({ dir: this.config.saveDir});
-        reqManager.start({ dir: this.config.saveDir});
+        respondFile.start({ dir: this.config.saveDir});
+        reqManager.start();
         app.use(this.config.apiPath, this._cacheMiddleWare());
         app.use(this.config.uiPath, uiServer.uiMiddleware(app));
         const httpServer = app.listen(this.config.port, () => {console.log(`open http://localhost:${this.config.port + this.config.uiPath}!`);});

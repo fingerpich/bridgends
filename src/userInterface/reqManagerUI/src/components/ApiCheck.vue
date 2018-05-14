@@ -5,10 +5,10 @@
     <p>
       <span>status: </span><small>{{ selectedRequest.status}}</small>
     </p>
-    <p v-if="selectedRequest.apiRespond">
+    <p v-if="selectedRequest.respond">
       <span>t:</span><small>{{respondTime}}s</small>
       <strong>body</strong>
-      <long-text :text="selectedRequest.apiRespond.body"></long-text>
+      <long-text :text="selectedRequest.respond && selectedRequest.respond.body"></long-text>
     </p>
     <el-button @click="testAPI">test</el-button>
   </div>
@@ -38,10 +38,7 @@ export default {
   },
   methods: {
     testAPI () {
-      console.log("test api");
-      axios.get('testApi', {req:this.selectedRequest.req.url}).then(data => {
-        console.log(data);
-      })
+      this.$socket.emit('testApi', this.selectedRequest.req.url);
     }
   }
 }
