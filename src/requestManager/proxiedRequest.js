@@ -1,5 +1,4 @@
 const getRawBody = require('raw-body');
-const urlFixer = require('../helpers/urlFixer.js');
 let cacheIDCounter = 111;
 const config = require('../../config.js');
 const RespondTypes = require('./respondType.js');
@@ -88,11 +87,18 @@ class ProxiedRequest {
         this.lastUsed = this.usedDates[0];
     }
 
-    addMock(mockData) {
-        const mockOption = {name: mockData.name, type: RespondTypes.MOCK, file: this._getFileName()};
+    addMock (mockData) {
+        const mockOption = {name: mockData.name, type: RespondTypes.MOCK, file: this._getFileName(), lastActivated: true};
         this.respondOptions.push(mockOption);
-        mockData.name.delete();
+        delete mockData.name;
         respondFile.save(mockData, mockOption.file);
+    }
+    editMock (mockData) {
+        const mock = this.respondOptions.filter((ro) => !(ro.type === RespondTypes.MOCK && ro.name === mockName));
+        Object.assign(mock[0], mockData);
+    }
+    removeMock (mockName) {
+        this.respondOptions = this.respondOptions.filter((ro) => !(ro.type === RespondTypes.MOCK && ro.name === mockName));
     }
 
     _getFileName() {

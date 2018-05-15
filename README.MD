@@ -1,24 +1,30 @@
 # Bridgends
 
-Its a development tool to cache, test, debug, proxy, mock the API.
+Its a development tool to cache, test, debug, proxy and mock API.
 
 ## introduction
+It makes a proxy with ui between Frontend and Backend in development time to handle the exchanging requests and responses
 
-Separation of front-end and backend has its gains but these problems may happen
+seperation of frontend and backend has a lots of pros but it needs
+Independent testing, development and API documentation
+takes a lot of time and resources for both team
+and testing and mocking is not the solution always
+specially in startups which changes time to time
+but if we didn't do that completely we would have following problem
  - API goes down sometimes.
- - API responds wrong and frontend developers has to use mock.
+ - API responds wrong and frontend developers have to use mock.
  - API responds late and frontend development would done slowly.
  - API is changed but frontend team are not aware of it.
- - Frontend tasks goes faster than backend and frontend will need not implemented api.
+ - Frontend needs an api which is not implemented.
+ - Multiple server for different API implementation.
 
 What Bridgends do
  - Caches the responds
- - Uses cache or mock or main API to respond the requests
+ - Uses cache or mock or the API to respond the requests
  - Detects responds changes
  - Tests and shows status of the API
- - Responds the same request respond if it didn't cached before
- - Makes you be able to change behave of every request in its ui
- - It will show what browser or webpack proxy send to the server and what is respond.
+ - It will show what browser or webpack proxy send to the server and what it responds.
+ - It can use
  - It can change the target for some of the requests so it will be able to centralize parallel API development
 
 ## install

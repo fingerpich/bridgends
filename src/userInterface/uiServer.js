@@ -34,6 +34,17 @@ class uiServer{
                 ws.on('addNewMock', ({url, newMock}) => {
                     const req = reqManager._getMatchRequest(url);
                     req.addMock(newMock);
+                    this.broadCast(req.serialize());
+                });
+                ws.on('removeMock', ({url, mockName}) => {
+                    const req = reqManager._getMatchRequest(url);
+                    req.removeMock(mockName);
+                    this.broadCast(req.serialize());
+                });
+                ws.on('editMock', ({url, newMock}) => {
+                    const req = reqManager._getMatchRequest(url);
+                    req.editMock(newMock);
+                    this.broadCast(req.serialize());
                 });
 
                 ws.on('getRespond', function (url) {

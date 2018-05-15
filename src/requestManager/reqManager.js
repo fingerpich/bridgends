@@ -22,10 +22,11 @@ class RequestManager {
                 return new proxiedRequest(rq);
             });
         });
-    }
 
-    _updateReqFile () {
-        respondFile.save(this.serialize(), fileName);
+        // Update requests file in every 10 minute
+        setInterval(() => {
+            respondFile.save(this.serialize(), fileName);
+        },1000 * 10);
     }
 
     _getMatchRequest (url) {
@@ -43,7 +44,6 @@ class RequestManager {
     accessed (req) {
         const match = this._getMatchRequest(req.url);
         match.requested(req);
-        this._updateReqFile();
         return match;
     }
 }

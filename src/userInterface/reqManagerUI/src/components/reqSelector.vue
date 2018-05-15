@@ -25,7 +25,14 @@ export default {
   },
   methods: {
     tableRowClassName({row, rowIndex}) {
-      return (row.updateTime>0) ? 'flash' : '';
+      let className = '';
+      if (row && this.currentRow) {
+        if (row.req.url === this.currentRow.req.url) {
+          className += 'active ';
+        }
+        className += (row.updateTime > 0) ? 'flash' : '';
+      }
+      return className;
     },
     handleCurrentChange(val) {
       this.$store.dispatch('setSelectedRequest', val);
@@ -42,6 +49,9 @@ export default {
 }
 .cell{
   padding: 0!important;
+}
+.active td{
+  background: #a0cdff!important;
 }
 
 @mixin keyframes($name) {

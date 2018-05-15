@@ -106,7 +106,7 @@ const mutations = {
     });
     if (matchReq.length) {
       matchReq = matchReq[0];
-      if (state.selectedReq.req.url === matchReq.req.url) {
+      if (state.selectedReq && state.selectedReq.req.url === matchReq.req.url) {
         state.selectedReq = matchReq;
       }
       matchReq = Object.assign(matchReq, processReq(changedReq));
