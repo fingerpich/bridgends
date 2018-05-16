@@ -15,13 +15,9 @@ const getters = {
   allRequests: state => state.requests,
   selectedRequest: state => state.selectedReq,
   getType: (state, type) => state.selectedReq.respondOptions.filter(res => res.type === type),
-  getMocks: state => getters.getType(state,RespondType.MOCK),
-  getCache: state => getters.getType(state,RespondType.CACHE)[0],
-  getAPIs: state => getters.getType(state,RespondType.API),
-  targetOptions: state =>  [
-    {label:'165.1654.1654.21', value: 'http://231.21621.23152.231'},
-    {label:'165.21.66.216', value: 'http://231.21621.23152.321'}
-  ],
+  getMocks: state => getters.getType(state, RespondType.MOCK),
+  getCache: state => getters.getType(state, RespondType.CACHE)[0],
+  getAPIs: state => getters.getType(state, RespondType.API),
   respondWay: state => state.selectedReq.respondWay,
   respondOptions: state => state.selectedReq.respondOptions,
   alternativeOptions: state => state.selectedReq.respondOptions.filter(o => o !== state.selectedReq.respondWay),
@@ -33,16 +29,22 @@ const actions = {
     this._vm.$socket.emit('getList', {});
   },
 
+  changeRespondWay (context, respondWay) {
+    const data = {url: getters.selectedRequest(context.state).req.url, respondWay};
+    this._vm.$socket.emit('changeRespondWay', data);
+    context.commit('changeRespondWay', data.respondWay);
+  },
+
   changeRespondWayType (context, selectedWayType) {
     if (getters.getType(context.state, selectedWayType).length) {
       const respondWay = getters.getType(context.state, selectedWayType).filter(tway => tway.lastActivated)[0];
-      const data = {url: getters.selectedRequest(context.state).req.url, respondWay};
-      this._vm.$socket.emit('changeRespondWay', data);
+      context.dispatch('changeRespondWay', respondWay)
     }
   },
 
   setSelectedRequest({dispatch, commit}, req) {
     commit('setSelectedReq', req);
+    this._vm.$socket.emit('getRespond', {url: req.req.url});
   }
 }
 // mutations are operations that actually mutates the state.
@@ -66,8 +68,18 @@ const mutations = {
     state.selectedReq = {...state.selectedReq};
     state.selectedReq.respondWay.target = target;
   },
+  changeRespondWay(state, way) {
+    if (way.type === state.selectedReq.respondWay.type) {
+      state.selectedReq.respondOptions
+        .filter(ro => ro.type === way.type)
+        .forEach(ro => {
+          ro.lastActivated = ro.file === way.file;
+        });
+    }
+    state.selectedReq = {...state.selectedReq, respondWay: way};
+  },
   updateRespondWay(state, choosenRespondWayType) {
-    let typeOptions = getters.getType(state, choosenRespondWayType)
+    let typeOptions = getters.getType(state, choosenRespondWayType);
     if (typeOptions.length > 1) {
       typeOptions = typeOptions.filter(ro => ro.lastActivated)
     }
@@ -106,10 +118,10 @@ const mutations = {
     });
     if (matchReq.length) {
       matchReq = matchReq[0];
+      matchReq = Object.assign(matchReq, processReq(changedReq));
       if (state.selectedReq && state.selectedReq.req.url === matchReq.req.url) {
         state.selectedReq = matchReq;
       }
-      matchReq = Object.assign(matchReq, processReq(changedReq));
       if(!matchReq.updateTime) matchReq.updateTime = 0;
       matchReq.updateTime++;
       setTimeout(()=> {

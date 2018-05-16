@@ -8,7 +8,6 @@ class ProxiedRequest {
     constructor (req) {
         this.usedDates = [];
         this.reqFileName = 0;
-
         if (req) { Object.assign(this, req); }
     }
 
@@ -23,6 +22,7 @@ class ProxiedRequest {
             usedDates: this.usedDates,
             respondOptions : this.respondOptions,
             respondWay : this.respondWay,
+            reqFileName : this.reqFileName,
         }
     }
 
@@ -31,9 +31,13 @@ class ProxiedRequest {
     }
 
     setRespondWay (respondWay) {
-        this.respondWay = respondWay;
-        return respondFile
-            .load(this.respondWay.file)
+        if (this.respondWay && this.respondWay.type === respondWay.type) {
+            this.respondOptions
+                .filter(ro => ro.type === respondWay.type)
+                .forEach(ro => ro.lastActivated = ro.file === respondWay.file);
+        }
+        this.respondWay = this.respondOptions.filter(ro => ro.file === respondWay.file)[0];
+        return respondFile.load(this.respondWay.file);
     }
     getRespondWay() {
         return this.respondWay;
@@ -88,17 +92,25 @@ class ProxiedRequest {
     }
 
     addMock (mockData) {
+        this.respondOptions.filter(ro => ro.type === RespondTypes.MOCK).forEach(m => m.lastActivated = false)
         const mockOption = {name: mockData.name, type: RespondTypes.MOCK, file: this._getFileName(), lastActivated: true};
         this.respondOptions.push(mockOption);
         delete mockData.name;
         respondFile.save(mockData, mockOption.file);
     }
-    editMock (mockData) {
-        const mock = this.respondOptions.filter((ro) => !(ro.type === RespondTypes.MOCK && ro.name === mockName));
-        Object.assign(mock[0], mockData);
+    editMock (editedMockData) {
+        const mockOption = this.respondOptions.filter((ro) => ro.file === editedMockData.file)[0];
+        Object.assign(mockOption, editedMockData);
+        delete editedMockData.name;
+        respondFile.save(editedMockData, mockOption.file);
     }
-    removeMock (mockName) {
-        this.respondOptions = this.respondOptions.filter((ro) => !(ro.type === RespondTypes.MOCK && ro.name === mockName));
+    removeMock (mockData) {
+        this.respondOptions = this.respondOptions.filter((ro) => !(ro.file === mockData.file));
+        const mocks = this.respondOptions.filter(ro => ro.type === RespondTypes.MOCK);
+        if (mocks.length > 0) {
+            this.respondWay = mocks[0];
+            this.respondWay.lastActivated = true;
+        }
     }
 
     _getFileName() {

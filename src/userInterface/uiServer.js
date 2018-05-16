@@ -28,7 +28,6 @@ class uiServer{
                         reqData.respond = respond;
                         this.broadCast(reqData);
                     });
-
                 });
 
                 ws.on('addNewMock', ({url, newMock}) => {
@@ -36,9 +35,9 @@ class uiServer{
                     req.addMock(newMock);
                     this.broadCast(req.serialize());
                 });
-                ws.on('removeMock', ({url, mockName}) => {
+                ws.on('removeMock', ({url, mock}) => {
                     const req = reqManager._getMatchRequest(url);
-                    req.removeMock(mockName);
+                    req.removeMock(mock);
                     this.broadCast(req.serialize());
                 });
                 ws.on('editMock', ({url, newMock}) => {
@@ -47,12 +46,12 @@ class uiServer{
                     this.broadCast(req.serialize());
                 });
 
-                ws.on('getRespond', function (url) {
+                ws.on('getRespond', ({url}) => {
                     const req = reqManager._getMatchRequest(url);
-                    req.getRespond().then((content) => {
-                        content.url = url;
-                        content.respondWayType = req.respondWay.type;
-                        ws.emit('updateReq', content);
+                    req.getRespond().then((respond) => {
+                        const reqData = req.serialize();
+                        reqData.respond = respond;
+                        this.broadCast(reqData);
                     });
                 });
             });

@@ -10,7 +10,7 @@
       <strong>body</strong>
       <long-text :text="selectedRequest.respond && selectedRequest.respond.body"></long-text>
     </p>
-    <el-button @click="testAPI">test</el-button>
+    <!--<el-button @click="testAPI">test</el-button>-->
   </div>
 </template>
 

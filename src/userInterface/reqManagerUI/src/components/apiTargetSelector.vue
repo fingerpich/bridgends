@@ -22,7 +22,7 @@ export default {
         return this.$store.getters.selectedRequest.respondWay.target;
       },
       set: function (value) {
-        return this.$store.commit('updateApiTarget', value);
+        this.$store.dispatch('changeRespondWay', this.$store.getters.getAPIs.filter(api => api.target === value)[0]);
       }
     },
   },
