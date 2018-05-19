@@ -5,15 +5,22 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": ""
+  },
+  "bin": {
+    "bridgends": "./cli.js"
   },
   "author": "Mojtaba Zarei(fingerpich)",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.18.0",
+    "commander": "^2.15.1",
     "express": "^4.16.3",
     "filendir": "^1.0.1",
     "http-proxy-middleware": "^0.18.0",
+    "inquirer": "^5.2.0",
+    "pm2": "^2.10.4",
     "raw-body": "^2.3.2",
     "request": "^2.85.0",
     "socket.io": "^2.1.0",
