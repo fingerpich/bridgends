@@ -1,49 +1,43 @@
 # Bridgends
+Its a development tool for frontend developer when they want to use some API which are under development.
 
-Its a development tool to cache, test, debug, proxy and mock API.
-
-## introduction
-It makes a proxy with ui between Frontend and Backend in development time to handle the exchanging requests and responses
-
-seperation of frontend and backend has a lots of pros but it needs
-Independent testing, development and API documentation
-takes a lot of time and resources for both team
-and testing and mocking is not the solution always
-specially in startups which changes time to time
-but if we didn't do that completely we would have following problem
- - API goes down sometimes.
- - API responds wrong and frontend developers have to use mock.
- - API responds late and frontend development would done slowly.
- - API is changed but frontend team are not aware of it.
- - Frontend needs an api which is not implemented.
- - Multiple server for different API implementation.
-
-What Bridgends do
- - Caches the responds
- - Uses cache or mock or the API to respond the requests
- - Detects responds changes
- - Tests and shows status of the API
- - It will show what browser or webpack proxy send to the server and what it responds.
- - It can use
- - It can change the target for some of the requests so it will be able to centralize parallel API development
-
-## install
-
-using npm
-
+## Installation
+Install its CLI
 ```
-npm i bridgends -S
+npm i bridgends -g
 ```
 
-## run
+## Introduction
+It is a proxy server at first which forward requests to API and cache responses
+then you can change or define a new way to respond (api, cache or mock) for every request.
 
-```js
-import bridgends from bridgends
+It consist a proxy server and its user interface which shows all the passing requests and make you able to see and change their respond
 
-bridgends.start({
-    apiPath: '/api',
-    target: 'http://192.168.82.198:81/api/',
-    saveDir: 'cache_api/',
-    port: 6464,
-});
+#### Example
+suppose that we want to run bridgends on a front end developer's system and
+api server is on http://192.168.82.198:81/api/
+
+ - `npm i bridgends -g`
+ - `bridgends start -t http://192.168.82.198:81/api/ -p 4243 -a /api`
+ - change frontend to send all request to `localhost:4243`
+   - if you are using webpack just change [the proxy](https://webpack.js.org/configuration/dev-server/#devserver-proxy
+   ```
+   proxy: {
+       "/api": {
+            target: "http://localhost:4243",
+       }
+   }
+   ```
+ - start front end web app
+ - open localhost:4243 in your browser and handle every request passing through
+
+#### start options
+```
+bridgends start -t http://192.168.82.198:81/api/
+```
+
+#### stop service
+```bash
+bridgends stop
+bridgends stop name
 ```

@@ -1,5 +1,3 @@
-import axios from 'axios'
-import config from '../../../../../config.js';
 import moment from 'jalali-moment';
 import RespondType from "../../../../requestManager/respondType.js"
 

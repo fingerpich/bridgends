@@ -44,8 +44,8 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss">
 .el-table th{
-  text-align: center;
-  padding: 0;
+  text-align: center!important;
+  padding: 0!important;
 }
 .cell{
   padding: 0!important;
