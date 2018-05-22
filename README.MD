@@ -1,5 +1,5 @@
 # Bridgends
-Its a development tool for frontend developer when they want to use some API which are under development.
+Its a development tool for frontend developer to use some API which are under development.
 
 ## Installation
 Install its CLI
@@ -8,14 +8,12 @@ npm i bridgends -g
 ```
 
 ## Introduction
-It is a proxy server at first which forward requests to API and cache responses
-then you can change or define a new way to respond (api, cache or mock) for every request.
-
-It consist a proxy server and its user interface which shows all the passing requests and make you able to see and change their respond
+It makes http server between frontend developer and APIs which forwards requests to APIs and also cache their response
+then it makes you able to change respond way(api, cache) or define a mock to respond by its user Interface.
 
 #### Example
 suppose that we want to run bridgends on a front end developer's system and
-api server is on http://192.168.82.198:81/api/
+we have api server on http://192.168.82.198:81/api/
 
  - `npm i bridgends -g`
  - `bridgends start -t http://192.168.82.198:81/api/ -p 4243 -a /api`
@@ -31,13 +29,22 @@ api server is on http://192.168.82.198:81/api/
  - start front end web app
  - open localhost:4243 in your browser and handle every request passing through
 
-#### start options
+#### CLI options
+
+Start and stop bridgends process
 ```
 bridgends start -t http://192.168.82.198:81/api/
+bridgends stop
 ```
 
-#### stop service
-```bash
+Add multiple API target
+```
+bridgends start -t http://192.168.82.198:81/api/,http://192.168.82.122:81/api/
 bridgends stop
+```
+
+Run multi instance
+```
+bridgends start name
 bridgends stop name
 ```
