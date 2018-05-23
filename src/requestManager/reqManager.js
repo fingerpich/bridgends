@@ -16,13 +16,13 @@ class RequestManager {
         return this.getApiRespond(req);
     }
 
-    start () {
+    start (targets) {
+        this.targets = targets;
         respondFile.load(fileName).then((parsed) => {
             this.list = parsed.map((rq) => {
-                return new proxiedRequest(rq);
+                return new proxiedRequest(rq, this.targets);
             });
         });
-
         // Update requests file in every 10 minute
         setInterval(() => {
             respondFile.save(this.serialize(), fileName);
@@ -33,7 +33,7 @@ class RequestManager {
         const matches = this.list.filter(r => r.matchUrl(url));
         let match;
         if (!matches.length) {
-            match = new proxiedRequest();
+            match = new proxiedRequest(null, this.targets);
             this.list.push(match);
         } else {
             match = matches[0];

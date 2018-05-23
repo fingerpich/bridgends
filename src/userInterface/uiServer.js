@@ -3,14 +3,13 @@ const path = require('path');
 const router = express.Router();
 const reqManager = require('../requestManager/reqManager.js');
 const io = require('socket.io');
-const config = require('../../config.js');
 
 class uiServer{
     constructor() {
     }
 
-    startWebSocket (httpServer) {
-        this.wss = io.listen(httpServer, {path: config.socketPath});
+    startWebSocket (httpServer, socketPath) {
+        this.wss = io.listen(httpServer, {path: socketPath});
         this.wss
             .on('connection', (ws) => {
                 const ip = ws.handshake.headers.host;

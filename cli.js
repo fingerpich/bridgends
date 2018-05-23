@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 const pm2 = require('pm2');
+const filendir = require('filendir');
+const path = require('path');
 const fs = require('fs');
 const program = require('commander');
 const inquirer = require('inquirer');
@@ -27,26 +29,25 @@ program
     .option('-a, --api-path [value]', 'Set api path')
     .option('-p, --port [value]', 'set instance port')
     .action((name, cmd) => {
+        const filePath = path.join(__dirname, cmd.savePath || config.savePath);
+        try {
+            filendir.writeFileSync(path.join(filePath, 'test.tmp'));
+        } catch(e) {
+            throw 'you have no write access in ' + filePath + ', use -f option eg: -f /home/fingerpich/bfiles';
+        }
         (() => {
             if (cmd.targets) {
-                config.targets = cmd.targets;
-                console.log('targets: ' + config.targets);
-                return Promise.resolve()
+                console.log('targets: ' + cmd.targets);
+                return Promise.resolve(cmd.targets)
             } else {
                 return inquirer.prompt({type: 'string', name: 'targets', message: 'you have to had an api target at least, enter targets(eg: http://192.168.10.20:4243/)'})
                     .then(answers => {
-                        config.targets = answers.targets.split(',');
-                        return config.targets;
+                        return answers.targets;
                     },(err) => {
                         console.error(err);
                     });
             }
-        })().then(() => {
-            if (cmd.apiPath) {config.apiPath = cmd.apiPath;}
-            if (cmd.savePath) {config.saveDir = cmd.savePath;}
-            if (cmd.port) {config.port = cmd.port;}
-            fs.writeFileSync('./config.js', 'module.exports =' + JSON.stringify(config));
-
+        })().then((targets) => {
             pm2.connect(function(err) {
                 if (err) {
                     console.error(err.message);
@@ -54,7 +55,14 @@ program
                 }
                 console.log('bridgends has started');
                 console.log('open http://localhost' +(config.port?':'+config.port:'') + '/ in your browser');
-                pm2.start({name, script: 'index.js'}, function (err, apps) {
+                pm2.start({
+                    name,
+                    script: 'index.js',
+                    args: (cmd.apiPath? '--apiPath ' + cmd.apiPath : '') +
+                    (cmd.savePath? '--savePath ' + cmd.savePath : '') +
+                    (cmd.port? '--port ' + cmd.port : '') +
+                    (targets? '--targets ' + targets : '')
+                }, function (err, apps) {
                     pm2.disconnect();
                     if (err) {
                         console.error(err.message);

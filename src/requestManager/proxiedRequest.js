@@ -1,11 +1,10 @@
 const getRawBody = require('raw-body');
 let cacheIDCounter = 111;
-const config = require('../../config.js');
 const RespondTypes = require('./respondType.js');
 const respondFile = require('../respondFiles/respondFile.js');
 
 class ProxiedRequest {
-    constructor (req) {
+    constructor (req, targets) {
         this.usedDates = [];
         this.reqFileName = 0;
         if (req) { Object.assign(this, req); }

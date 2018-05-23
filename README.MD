@@ -12,8 +12,8 @@ It makes http server between frontend developer and APIs which forwards requests
 then it makes you able to change respond way(api, cache) or define a mock to respond by its user Interface.
 
 #### Example
-suppose that we want to run bridgends on a front end developer's system and
-we have api server on http://192.168.82.198:81/api/
+suppose we want to run bridgends on a front end developer's system and
+we have an API on http://192.168.82.198:81/api/
 
  - `npm i bridgends -g`
  - `bridgends start -t http://192.168.82.198:81/api/ -p 4243 -a /api`
@@ -33,18 +33,23 @@ we have api server on http://192.168.82.198:81/api/
 
 Start and stop bridgends process
 ```
-bridgends start -t http://192.168.82.198:81/api/
+bridgends start -t http://192.168.82.198:81/
 bridgends stop
 ```
 
-Add multiple API target
+Multiple API target
 ```
-bridgends start -t http://192.168.82.198:81/api/,http://192.168.82.122:81/api/
+bridgends start -t http://192.168.82.198:81/,http://192.168.82.122:81/
 bridgends stop
 ```
 Set port, apiPath, savePath
+
+Defaults
+ - port: `6464`
+ - apiPath: `/api`
+ - apiPath: `./bridgendsfiles`
 ```
-bridgends start -t http://192.168.82.198:81/gapi/ -a /gapi -p 4542 -f /home/fingerpich/bridgendsFiles
+bridgends start -t http://192.168.82.198:81/ -a /api2 -p 4542 -f /home/fingerpich/bridgendsFiles
 bridgends stop
 ```
 
