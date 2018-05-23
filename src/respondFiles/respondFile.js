@@ -15,7 +15,7 @@ class FileResponds {
         const filePath = this._getFileName(name);
         filendir.writeFile(filePath, JSON.stringify(data), function (err) {
             if (err) {
-                log('File could not be saved in ' + this.savePath);
+                console.log('File could not be saved in ' + this.savePath);
                 throw err
             }
         }.bind(this));

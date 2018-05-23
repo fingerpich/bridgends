@@ -42,6 +42,11 @@ Add multiple API target
 bridgends start -t http://192.168.82.198:81/api/,http://192.168.82.122:81/api/
 bridgends stop
 ```
+Set port, apiPath, savePath
+```
+bridgends start -t http://192.168.82.198:81/gapi/ -a /gapi -p 4542 -f /home/fingerpich/bridgendsFiles
+bridgends stop
+```
 
 Run multi instance
 ```

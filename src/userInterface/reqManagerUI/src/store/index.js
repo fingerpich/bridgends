@@ -1,4 +1,4 @@
-import config from '../../../../../config.js'
+import config from '../../../../../defaultconfig.js'
 import Vue from 'vue'
 import Vuex from 'vuex'
 // import createPersistedState from 'vuex-persistedstate'

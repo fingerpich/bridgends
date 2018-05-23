@@ -23,11 +23,9 @@ program
     .command('start [name]')
     .description('start new instance of bridgends')
     .option('-t, --targets <targets>', 'set api targets', list => list.split(','))
-    .option('-u, --ui-path [value]', 'set instance ui path')
     .option('-f, --save-path [value]', 'Set files path')
     .option('-a, --api-path [value]', 'Set api path')
     .option('-p, --port [value]', 'set instance port')
-    .option('-o, --socket-path [value]', 'Set socket path')
     .action((name, cmd) => {
         (() => {
             if (cmd.targets) {
@@ -44,9 +42,8 @@ program
                     });
             }
         })().then(() => {
-            if (cmd.uiPath) {config.uiPath = cmd.uiPath;}
+            if (cmd.apiPath) {config.apiPath = cmd.apiPath;}
             if (cmd.savePath) {config.saveDir = cmd.savePath;}
-            if (cmd.socketPath) {config.socketPath = cmd.socketPath;}
             if (cmd.port) {config.port = cmd.port;}
             fs.writeFileSync('./config.js', 'module.exports =' + JSON.stringify(config));
 

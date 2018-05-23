@@ -3,7 +3,7 @@
 // see http://vuejs-templates.github.io/webpack for documentation.
 
 const path = require('path')
-const config = require('../../../../config.js')
+const config = require('../../../../defaultconfig.js')
 const proxyTable = {};
 proxyTable[config.uiPath] = { target: 'http://localhost:' + config.port };
 proxyTable[config.socketPath] = { target: 'ws://localhost:' + config.port, ws: true};
@@ -42,10 +42,10 @@ module.exports = {
 
   build: {
     // Template for index.html
-    index: path.resolve(__dirname, '../dist/index.html'),
+    index: path.resolve(__dirname, '../../public/index.html'),
 
     // Paths
-    assetsRoot: path.resolve(__dirname, '../../../../public'),
+    assetsRoot: path.resolve(__dirname, '../../public'),
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
 

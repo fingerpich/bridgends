@@ -62,7 +62,7 @@ class uiServer{
     }
 
     uiMiddleware(app) {
-        const uiPath = path.join(__dirname, '../../public');
+        const uiPath = path.join(__dirname, './public');
         app.use(express.static(uiPath));
         // define the home page route
         router.get('/', function (req, res) {
