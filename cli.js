@@ -2,13 +2,13 @@
 const pm2 = require('pm2');
 const filendir = require('filendir');
 const path = require('path');
-const fs = require('fs');
+const pkg = require('./package.json');
 const program = require('commander');
 const inquirer = require('inquirer');
 const config = require('./defaultconfig.js');
 
 program
-    .version('0.0.1', '-v, --version');
+    .version(pkg.version, '-v, --version');
 
 program
     .command('stop [name]')
@@ -29,11 +29,12 @@ program
     .option('-a, --api-path [value]', 'Set api path')
     .option('-p, --port [value]', 'set instance port')
     .action((name, cmd) => {
-        const filePath = path.join(__dirname, cmd.savePath || config.savePath);
+        const filePath = cmd.savePath || config.savePath;
         try {
             filendir.writeFileSync(path.join(filePath, 'test.tmp'));
         } catch(e) {
-            throw 'you have no write access in ' + filePath + ', use -f option eg: -f /home/fingerpich/bfiles';
+            console.log('you have no write access in ' + filePath + ', use -f option eg: -f /home/fingerpich/bfiles');
+            return;
         }
         (() => {
             if (cmd.targets) {
@@ -41,11 +42,6 @@ program
                 return Promise.resolve(cmd.targets)
             } else {
                 return inquirer.prompt({type: 'string', name: 'targets', message: 'you have to had an api target at least, enter targets(eg: http://192.168.10.20:4243/)'})
-                    .then(answers => {
-                        return answers.targets;
-                    },(err) => {
-                        console.error(err);
-                    });
             }
         })().then((targets) => {
             pm2.connect(function(err) {
@@ -58,10 +54,10 @@ program
                 pm2.start({
                     name,
                     script: 'index.js',
-                    args: (cmd.apiPath? '--apiPath ' + cmd.apiPath : '') +
-                    (cmd.savePath? '--savePath ' + cmd.savePath : '') +
-                    (cmd.port? '--port ' + cmd.port : '') +
-                    (targets? '--targets ' + targets : '')
+                    args: (cmd.apiPath? ' --apiPath ' + cmd.apiPath : '') +
+                    (cmd.savePath? ' --savePath ' + cmd.savePath : '') +
+                    (cmd.port? ' --port ' + cmd.port : '') +
+                    (targets? ' --targets ' + targets : '')
                 }, function (err, apps) {
                     pm2.disconnect();
                     if (err) {
