@@ -2,7 +2,6 @@
 Its a development tool for frontend developer to use some API which are under development.
 
 ## Installation
-Install its CLI
 ```
 npm i bridgends -g
 ```
@@ -27,7 +26,7 @@ we have an API on http://192.168.82.198:81/api/
    }
    ```
  - start front end web app
- - open localhost:4243 in your browser and handle every request passing through
+ - open `localhost:4243` in your browser and handle every request passing through
 
 #### CLI options
 
@@ -46,8 +45,8 @@ Set port, apiPath, savePath
 
 Defaults
  - port: `6464`
- - apiPath: `/api`
- - apiPath: `./bridgendsfiles`
+ - api path: `/api`
+ - file path: `./bridgendsfiles`
 ```
 bridgends start -t http://192.168.82.198:81/ -a /api2 -p 4542 -f /home/fingerpich/bridgendsFiles
 bridgends stop
