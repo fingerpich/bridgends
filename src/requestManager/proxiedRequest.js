@@ -8,6 +8,13 @@ class ProxiedRequest {
         this.usedDates = [];
         this.reqFileName = 0;
         if (req) { Object.assign(this, req); }
+        this.respondOptions = targets.map((target, i) => {
+            return {type: RespondTypes.API, target, file: this._getFileName()}
+        });
+        if (!this.respondWay) {
+            this.respondWay = this.respondOptions[0];
+            this.respondWay.lastActivated = true;
+        }
     }
 
     matchUrl (url) {
@@ -74,14 +81,6 @@ class ProxiedRequest {
         };
         this.saveRequestData(req);
 
-        if (!this.respondOptions) {
-            this.respondOptions = config.targets.map((target, i) => {return {type: RespondTypes.API, target, file: this._getFileName()}});
-        }
-        if (!this.respondWay) {
-            this.respondWay = this.respondOptions[0];
-            this.respondWay.lastActivated = true;
-        }
-
         this.previousState = this.status;
         this.status = 0;
 
@@ -120,7 +119,6 @@ class ProxiedRequest {
         const isRespondError = apiResponded.statusCode !== 200;
         const isRespondHasData = apiResponded.body;
         this.status = apiResponded.statusCode;
-        this.targets = config.targets;
 
         respondFile.save(apiResponded, this.respondOptions.filter(ro => ro.target === this.getSelectedTarget())[0].file);
         if (!isRespondError && isRespondHasData) {
