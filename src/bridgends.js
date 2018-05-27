@@ -33,8 +33,8 @@ class Bridgends {
                 };
                 const respondWay = requested.getRespondWay();
                 switch (respondWay.type) {
-                    case RespondTypes.MOCK: respondFile.load(respondWay.mockID).then(respondBack); break;
-                    case RespondTypes.CACHE: respondFile.load(respondWay.cacheID).then(respondBack); break;
+                    case RespondTypes.MOCK: respondFile.load(respondWay.file).then(respondBack); break;
+                    case RespondTypes.CACHE: respondFile.load(respondWay.file).then(respondBack); break;
                     // case RespondTypes.API: return this.apiPromise;
                 }
             },
@@ -67,7 +67,7 @@ class Bridgends {
         this.config = config;
         const app = express();
         respondFile.start({dir: this.config.savePath});
-        reqManager.start();
+        reqManager.start(config.targets);
         app.use(this.config.apiPath, this._cacheMiddleWare());
         app.use(this.config.uiPath, uiServer.uiMiddleware(app));
         const httpServer = app.listen(this.config.port, () => {
