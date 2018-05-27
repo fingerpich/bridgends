@@ -15,7 +15,7 @@ suppose we want to run bridgends on a front end developer's system and
 we have an API on http://192.168.82.198:81/api/
 
  - `npm i bridgends -g`
- - `bridgends start -t http://192.168.82.198:81/api/ -p 4243 -a /api`
+ - `bridgends start -t http://192.168.82.198:81/ -p 4243 -a /api`
  - change frontend to send all request to `localhost:4243`
    - if you are using webpack just change [the proxy](https://webpack.js.org/configuration/dev-server/#devserver-proxy
    ```
