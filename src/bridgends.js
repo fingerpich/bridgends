@@ -66,12 +66,12 @@ class Bridgends {
     start (config) {
         this.config = config;
         const app = express();
-        respondFile.start({dir: this.config.savePath});
+        respondFile.start({dir: config.savePath, instanceName: config.name});
         reqManager.start(config.targets);
-        app.use(this.config.apiPath, this._cacheMiddleWare());
-        app.use(this.config.uiPath, uiServer.uiMiddleware(app));
-        const httpServer = app.listen(this.config.port, () => {
-            console.log(`open http://localhost:${this.config.port + this.config.uiPath}!`);
+        app.use(config.apiPath, this._cacheMiddleWare());
+        app.use(config.uiPath, uiServer.uiMiddleware(app));
+        const httpServer = app.listen(config.port, () => {
+            console.log(`open http://localhost:${config.port + config.uiPath}!`);
         });
         uiServer.startWebSocket(httpServer, config.socketPath);
     }

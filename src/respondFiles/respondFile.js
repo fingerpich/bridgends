@@ -7,8 +7,9 @@ class FileResponds {
 
     }
 
-    start ({dir}) {
+    start ({dir, instanceName}) {
         this.savePath = dir;
+        this.instanceName = instanceName;
     }
 
     save (data, name) {
@@ -50,7 +51,7 @@ class FileResponds {
     }
 
     _getFileName (name) {
-        return path.join(this.savePath, name + '.tmp')
+        return path.join(this.savePath, this.instanceName + name + '.tmp')
     }
 }
 

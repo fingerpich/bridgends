@@ -20,7 +20,12 @@ program
             process.exit(2);
         }, 2000);
     });
-
+program
+    .command('reset [name]')
+    .description('reset bridgends and remove caches')
+    .action((name, cmd) => {
+        // remove files
+    })
 program
     .command('start [name]')
     .description('start new instance of bridgends')
@@ -58,6 +63,7 @@ program
                     (cmd.savePath? ' --savePath ' + cmd.savePath : '') +
                     (cmd.port? ' --port ' + cmd.port : '') +
                     (targets? ' --targets ' + targets : '')
+                    (name? ' --name ' + name : '')
                 }, function (err, apps) {
                     pm2.disconnect();
                     if (err) {
