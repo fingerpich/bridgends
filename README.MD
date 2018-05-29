@@ -1,6 +1,23 @@
 # Bridgends
 Its a development tool for frontend developer to use some API which are under development.
 
+[![MIT License][license-image]][license-url]
+[license-image]: http://img.shields.io/badge/license-MIT-blue.svg?style=flat
+[license-url]: LICENSE
+
+[![NPM version][npm-version-image]][npm-url]
+[npm-url]: https://npmjs.org/package/bridgends
+[npm-version-image]: http://img.shields.io/npm/v/bridgends.svg?style=flat
+
+[![dependencies Quality][dependencies-quality]][dependencies-quality-url]
+[dependencies-quality]: https://david-dm.org/fingerpich/bridgends.svg
+[dependencies-quality-url]: https://david-dm.org/fingerpich/bridgends
+
+[![dev dependencies Quality][dev-dependencies-quality]][dev-dependencies-quality-url]
+[dev-dependencies-quality]: https://david-dm.org/fingerpich/bridgends/dev-status.svg
+[dev-dependencies-quality-url]: https://david-dm.org/fingerpich/bridgends?type=dev
+
+
 ## Installation
 ```
 npm i bridgends -g
