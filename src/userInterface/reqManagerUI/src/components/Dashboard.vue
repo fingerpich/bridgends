@@ -28,7 +28,7 @@
           <h4>API</h4>
           <api-target-selector></api-target-selector>
           <api-check></api-check>
-          <!--<handle-api-fail></handle-api-fail>-->
+          <handle-api-fail></handle-api-fail>
           <!--<label>add another api option</label>-->
           <!--<el-button icon="el-icon-plus"></el-button>-->
         </div>
@@ -40,7 +40,7 @@
 <script>
   import RespondType from "../../../../requestManager/respondType.js"
   import RequestSelector from "./reqSelector";
-  import HandleApiFail from "./ApiFaulure";
+  import HandleApiFail from "./ApiFailure";
   import ApiCheck from "./ApiCheck";
   import ApiTargetSelector from "./apiTargetSelector";
   import LongText from "./longText";
@@ -72,16 +72,13 @@
       respondWay: {
         get: function () {
           return this.$store.getters.selectedRequest.respondWay.type;
-        },
-        set: function (value) {
-          this.$store.commit('updateRespondWay', value);
         }
       },
     },
     created () {},
     data () {
       return {
-        respondWays: [RespondType.MOCK,RespondType.CACHE,RespondType.API],
+        respondWays: [RespondType.MOCK, RespondType.CACHE, RespondType.API],
         respondW: RespondType.API,
         RespondType: RespondType
       }

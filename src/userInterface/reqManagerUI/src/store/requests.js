@@ -39,6 +39,11 @@ const actions = {
       context.dispatch('changeRespondWay', respondWay)
     }
   },
+  changeAlternativeWay (context, selectedAlternative) {
+    const respondWay = getters.selectedRequest(context.state).respondWay;
+    respondWay.alternativeWay = selectedAlternative;
+    context.commit('updateAlternativeWay', respondWay);
+  },
 
   setSelectedRequest({dispatch, commit}, req) {
     commit('setSelectedReq', req);
@@ -58,14 +63,6 @@ const processReq = (req) => {
 };
 
 const mutations = {
-  updateAlternativeWay(state, choosenWay) {
-    state.selectedReq = {...state.selectedReq};
-    state.selectedReq.respondWay.alternativeWay = choosenWay;
-  },
-  updateApiTarget(state, target) {
-    state.selectedReq = {...state.selectedReq};
-    state.selectedReq.respondWay.target = target;
-  },
   changeRespondWay(state, way) {
     if (way.type === state.selectedReq.respondWay.type) {
       state.selectedReq.respondOptions
