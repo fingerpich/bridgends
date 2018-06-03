@@ -16,11 +16,13 @@ class RequestManager {
         return this.getApiRespond(req);
     }
 
-    start (targets) {
+    start (targets, defaultTimeout) {
         this.targets = targets;
+        this.defaultTimeout = defaultTimeout;
+
         respondFile.load(fileName).then((parsed) => {
             this.list = parsed.map((rq) => {
-                return new proxiedRequest(rq, this.targets);
+                return new proxiedRequest(rq);
             });
         });
         // Update requests file in every 10 minute
@@ -33,13 +35,65 @@ class RequestManager {
         const matches = this.list.filter(r => r.matchUrl(url));
         let match;
         if (!matches.length) {
-            match = new proxiedRequest(null, this.targets);
+            match = new proxiedRequest(null, this.targets, this.defaultTimeout);
             this.list.push(match);
         } else {
             match = matches[0];
         }
         return match;
     }
+
+    respondAlternatives (url) {
+        return new Promise((resolve, reject) => {
+            const requested = this._getMatchRequest(url);
+            if (requested.respondWay.alternativeWay) {
+                const alternativeWay = JSON.parse(requested.respondWay.alternativeWay);
+
+                if (alternativeWay.type !== RespondTypes.API) {
+                    requested.getRespond(alternativeWay.type, alternativeWay.name).then((data) => {
+                        resolve(data);
+                    });
+                } else {
+                    this._getMatchRequest(alternativeWay.url)
+                        .getRespond(RespondTypes.CACHE)
+                        .then((cacheData) => {
+                            resolve(cacheData);
+                        });
+                }
+            } else {
+                const simReq = this.findSimilarCachedRequest(url);
+                if (simReq) {
+                    simReq
+                        .getRespond(RespondTypes.CACHE)
+                        .then((cacheData) => {
+                            resolve(cacheData);
+                        });
+                } else {
+                    reject('can not find any similar cached request');
+                }
+            }
+        });
+    }
+
+    findSimilarCachedRequest (url) {
+        const removeFromEnd = (url, char) => {
+            return url.slice(0, url.lastIndexOf(char));
+        };
+
+        const chars = ['&', '?', '/'];
+        for (let c in chars) {
+            while (url.indexOf(c) > 0) {
+                url = removeFromEnd(url, '&');
+                const lst = this.list.filter((pr) => pr.req.url.indexOf(url) > -1 && pr.hasCache());
+                if (lst.length) {
+                    return lst[0];
+                }
+            }
+        }
+
+        return 0;
+    }
+
 
     accessed (req) {
         const match = this._getMatchRequest(req.url);

@@ -12,6 +12,23 @@ class Bridgends {
     constructor() {
 
     }
+
+    respondClient (res, data) {
+        if (!res.headersSent) {
+            res.writeHead(data.statusCode, data.headers);
+            res.end(data.body);
+        }
+    }
+    getResp (url) {
+        const requested = reqManager._getMatchRequest(url);
+        const respondWay = requested.getRespondWay();
+        if (respondWay.type !== RespondTypes.API) { // Its Mock or Cache
+            return respondFile.load(respondWay.file);
+        } else {
+            Promise.reject('its API');
+        }
+    }
+
     _cacheMiddleWare () {
         return proxy({
             target: this.config.targets[0],
@@ -25,23 +42,24 @@ class Bridgends {
             onProxyReq: (proxyReq, req, res) => {
                 const requested = reqManager._getMatchRequest(req.url);
                 uiServer.broadCast(requested.serialize());
-                const respondBack = (data) => {
-                    if (!res.headersSent) {
-                        res.writeHead(data.statusCode, data.headers);
-                        res.end(data.body);
-                    }
-                };
+
                 const respondWay = requested.getRespondWay();
-                switch (respondWay.type) {
-                    case RespondTypes.MOCK: respondFile.load(respondWay.file).then(respondBack); break;
-                    case RespondTypes.CACHE: respondFile.load(respondWay.file).then(respondBack); break;
-                    // case RespondTypes.API: return this.apiPromise;
+                if (respondWay.type !== RespondTypes.API) { // Its Mock or Cache
+                    requested.getRespond().then(data => {
+                        this.respondClient(res, data);
+                    });
+                }
+
+                requested.onTimeout = () => {
+                    reqManager.respondAlternatives(requested.req.url).then(data => {
+                        this.respondClient(res, data);
+                    }, (err) => {
+                        this.respondClient(res, {body:{err}});
+                    });
                 }
             },
             onProxyRes: (proxyRes, req, res) => {
                 const requested = reqManager._getMatchRequest(req.url);
-
-                // https://github.com/chimurai/http-proxy-middleware/issues/97#issuecomment-268180448
                 let body = '';
                 proxyRes.on('data', (data) => {
                     data = data.toString('utf-8');
@@ -55,8 +73,16 @@ class Bridgends {
                         headers: proxyRes.headers,
                         resTime: Date.now()
                     };
-
-                    requested.setResponse(envelope);
+                    if (requested.isValidResponse(envelope)) {
+                        this.respondClient(res, envelope);
+                    } else {
+                        reqManager.respondAlternatives(req.url).then((data) => {
+                            this.respondClient(res, data);
+                        }, (err) => {
+                            console.log(err);
+                            this.respondClient(res, envelope);
+                        });
+                    }
                     uiServer.broadCast(requested.serialize());
                 });
             }
@@ -67,7 +93,7 @@ class Bridgends {
         this.config = config;
         const app = express();
         respondFile.start({dir: config.savePath, instanceName: config.name});
-        reqManager.start(config.targets);
+        reqManager.start(config.targets, config.requestTimeout);
         app.use(config.apiPath, this._cacheMiddleWare());
         app.use(config.uiPath, uiServer.uiMiddleware(app));
         const httpServer = app.listen(config.port, () => {
