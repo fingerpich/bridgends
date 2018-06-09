@@ -1,9 +1,9 @@
 <template>
   <div class="HandleApiFail">
-    <div v-show="alternativeOptions.length > 0">
-      <p><small>If it could not answer respond with</small></p>
+    <div v-show="options.length > 0">
+      <div><small>If it could not answer respond with</small></div>
       <el-cascader
-        v-if="item!==respondWay"
+        v-if="options"
         :options="options"
         v-model="alternativeWay">
       </el-cascader>
@@ -24,35 +24,48 @@ export default {
         const selectedReq = this.$store.getters.selectedRequest;
         const options = [];
         if (mocks.length) {
-          const mockObj = {label: 'Mock'};
+          const mockObj = {label: 'Mock', value: RespondType.MOCK};
           if (mocks.length > 1) {
-            mockObj.children = mocks.map((m) => {return {value: `{name: "${m.name}", type: "${RespondType.MOCK}"}`, label: m.name}});
+            mockObj.children = mocks.map((m) => {return {value: m.name, label: m.name}});
           } else {
             mockObj.value = mocks[0].name;
           }
           options.push(mockObj);
         }
         if (cache) {
-          const cacheObj = {label: `{type: "${RespondType.CACHE}"}`, value: 'cache'};
+          const cacheObj = {value: RespondType.CACHE, label: 'cache'};
           options.push(cacheObj);
         }
         if (requests.length > 1) {
-          const anotherRequests = {label: 'As Another Request'};
+          const anotherRequests = {label: 'As Request', value: RespondType.API};
           anotherRequests.children = requests
             .filter(r => r !== selectedReq)
             .map(r => {
-              return {value: `{url: "${r.req.url}", type: "${RespondType.API}"}`, name: r.req.baseUrl};
+              return {value: r.req.url, label: r.req.baseUrl};
             });
           options.push(anotherRequests);
         }
+        return options;
       }
     },
     alternativeWay: {
       get: function () {
-        return this.$store.getters.selectedRequest.respondWay.alternativeWay;
+        let av = this.$store.getters.selectedRequest.respondWay.alternativeWay
+        if (av.type!==RespondType.CACHE){
+          return[av.type, av.data];
+        }
+        return [av.data];
       },
       set: function (value) {
-        return this.$store.dispatch('changeAlternativeWay', value);
+        const obj = {};
+        if (value.length > 1){
+          obj.type = value[0];
+          obj.data = value[1];
+        } else {
+          obj.type = RespondType.CACHE;
+          obj.data = value[0];
+        }
+        return this.$store.dispatch('changeAlternativeWay', obj);
       }
     },
   },

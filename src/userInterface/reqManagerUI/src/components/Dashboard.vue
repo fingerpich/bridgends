@@ -28,7 +28,9 @@
           <h4>API</h4>
           <api-target-selector></api-target-selector>
           <api-check></api-check>
-          <handle-api-fail></handle-api-fail>
+          <div class="asfaf">
+            <handle-api-fail></handle-api-fail>
+          </div>
           <!--<label>add another api option</label>-->
           <!--<el-button icon="el-icon-plus"></el-button>-->
         </div>

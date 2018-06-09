@@ -4,7 +4,6 @@ const respondFile = require('./respondFiles/respondFile.js');
 const express = require('express');
 const uiServer = require('./userInterface/uiServer.js');
 const proxy = require('http-proxy-middleware');
-
 const reqManager = require('./requestManager/reqManager.js');
 
 class Bridgends {

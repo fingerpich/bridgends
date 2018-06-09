@@ -73,6 +73,9 @@ class ProxiedRequest {
                 .forEach(ro => ro.lastActivated = ro.file === respondWay.file);
         }
         this.respondWay = this.respondOptions.filter(ro => ro.file === respondWay.file)[0];
+        if (respondWay.alternativeWay) {
+            this.respondWay.alternativeWay = respondWay.alternativeWay
+        }
         return respondFile.load(this.respondWay.file);
     }
     getRespondWay() {
@@ -155,7 +158,7 @@ class ProxiedRequest {
             this.respondOptions.push(cacheRespond);
             this.respondWay = cacheRespond;
             respondFile.save(apiResponded, cacheRespond.file);
-            this.respondWay.alternativeWay = JSON.stringify({type: RespondTypes.CACHE});
+            this.respondWay.alternativeWay = {type: RespondTypes.CACHE};
         }
     }
 

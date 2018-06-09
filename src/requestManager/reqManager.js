@@ -50,11 +50,11 @@ class RequestManager {
                 const alternativeWay = JSON.parse(requested.respondWay.alternativeWay);
 
                 if (alternativeWay.type !== RespondTypes.API) {
-                    requested.getRespond(alternativeWay.type, alternativeWay.name).then((data) => {
+                    requested.getRespond(alternativeWay.type, alternativeWay.data).then((data) => {
                         resolve(data);
                     });
                 } else {
-                    this._getMatchRequest(alternativeWay.url)
+                    this._getMatchRequest(alternativeWay.data)
                         .getRespond(RespondTypes.CACHE)
                         .then((cacheData) => {
                             resolve(cacheData);

@@ -42,7 +42,7 @@ const actions = {
   changeAlternativeWay (context, selectedAlternative) {
     const respondWay = getters.selectedRequest(context.state).respondWay;
     respondWay.alternativeWay = selectedAlternative;
-    context.commit('updateAlternativeWay', respondWay);
+    context.dispatch('changeRespondWay', respondWay)
   },
 
   setSelectedRequest({dispatch, commit}, req) {
