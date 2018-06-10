@@ -69,5 +69,8 @@ export default {
   animation-name: flashing;
   animation-duration: 0.3s;
 }
+.el-table .cell {
+  word-break: normal;
+}
 
 </style>

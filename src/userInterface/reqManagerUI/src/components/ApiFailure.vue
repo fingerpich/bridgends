@@ -51,10 +51,14 @@ export default {
     alternativeWay: {
       get: function () {
         let av = this.$store.getters.selectedRequest.respondWay.alternativeWay
-        if (av.type!==RespondType.CACHE){
-          return[av.type, av.data];
+        if (av) {
+          if (av.type !== RespondType.CACHE) {
+            return [av.type, av.data];
+          }
+          return [av.data];
+        } else {
+          return [];
         }
-        return [av.data];
       },
       set: function (value) {
         const obj = {};

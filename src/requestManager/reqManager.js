@@ -1,6 +1,7 @@
 const proxiedRequest = require('./proxiedRequest.js');
 const fileName = 'requests';
 const respondFile = require('../respondFiles/respondFile.js');
+const RespondTypes = require('./respondType.js');
 
 class RequestManager {
     constructor () {
@@ -46,36 +47,34 @@ class RequestManager {
     respondAlternatives (url) {
         return new Promise((resolve, reject) => {
             const requested = this._getMatchRequest(url);
-            if (requested.respondWay.alternativeWay) {
-                const alternativeWay = JSON.parse(requested.respondWay.alternativeWay);
-
-                if (alternativeWay.type !== RespondTypes.API) {
-                    requested.getRespond(alternativeWay.type, alternativeWay.data).then((data) => {
-                        resolve(data);
-                    });
-                } else {
-                    this._getMatchRequest(alternativeWay.data)
-                        .getRespond(RespondTypes.CACHE)
-                        .then((cacheData) => {
-                            resolve(cacheData);
-                        });
-                }
-            } else {
+            if (!requested.respondWay.alternativeWay) {
                 const simReq = this.findSimilarCachedRequest(url);
                 if (simReq) {
-                    simReq
-                        .getRespond(RespondTypes.CACHE)
-                        .then((cacheData) => {
-                            resolve(cacheData);
-                        });
+                    requested.setAlternativeWay({type: RespondTypes.API, data: simReq.req.url, auto: true});
                 } else {
-                    reject('can not find any similar cached request');
+                    reject('can not find any similar cached request for' + requested.req.url);
+                    return;
                 }
+            }
+            const alternativeWay = requested.respondWay.alternativeWay;
+
+            if (alternativeWay.type !== RespondTypes.API) {
+                requested.getRespond(alternativeWay.type, alternativeWay.data).then((data) => {
+                    resolve(data);
+                });
+            } else {
+                // It will respond as another request
+                this._getMatchRequest(alternativeWay.data)
+                    .getRespond(RespondTypes.CACHE)
+                    .then((cacheData) => {
+                        resolve(cacheData);
+                    });
             }
         });
     }
 
-    findSimilarCachedRequest (url) {
+    findSimilarCachedRequest (originUrl) {
+        let url = originUrl;
         const removeFromEnd = (url, char) => {
             return url.slice(0, url.lastIndexOf(char));
         };
@@ -84,7 +83,7 @@ class RequestManager {
         for (let c in chars) {
             while (url.indexOf(c) > 0) {
                 url = removeFromEnd(url, '&');
-                const lst = this.list.filter((pr) => pr.req.url.indexOf(url) > -1 && pr.hasCache());
+                const lst = this.list.filter((pr) => pr.req.url !== originUrl && pr.req.url.indexOf(url) > -1 && pr.hasCache());
                 if (lst.length) {
                     return lst[0];
                 }

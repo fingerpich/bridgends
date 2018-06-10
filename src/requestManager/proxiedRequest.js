@@ -73,11 +73,18 @@ class ProxiedRequest {
                 .forEach(ro => ro.lastActivated = ro.file === respondWay.file);
         }
         this.respondWay = this.respondOptions.filter(ro => ro.file === respondWay.file)[0];
-        if (respondWay.alternativeWay) {
-            this.respondWay.alternativeWay = respondWay.alternativeWay
+
+        if (respondWay.type === RespondTypes.API && respondWay.alternativeWay) {
+            this.setAlternativeWay(respondWay.alternativeWay);
         }
         return respondFile.load(this.respondWay.file);
     }
+
+    setAlternativeWay (alternativeWay) {
+        this.respondOptions
+            .filter((ro) => ro.type === RespondTypes.API && ro.lastActivated)[0].alternativeWay = alternativeWay;
+    }
+
     getRespondWay() {
         return this.respondWay;
     }
@@ -158,7 +165,12 @@ class ProxiedRequest {
             this.respondOptions.push(cacheRespond);
             this.respondWay = cacheRespond;
             respondFile.save(apiResponded, cacheRespond.file);
-            this.respondWay.alternativeWay = {type: RespondTypes.CACHE};
+
+            const altway = this.respondWay.alternativeWay;
+            if (!altway || (altway && altway.auto)) {
+                this.setAlternativeWay({type: RespondTypes.CACHE, data: RespondTypes.CACHE});
+                console.log(this.respondWay.alternativeWay);
+            }
         }
     }
 
