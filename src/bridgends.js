@@ -67,7 +67,7 @@ class Bridgends {
                 proxyRes.on('end', (data) => {
                     const envelope = {
                         body: body,
-                        reqTime: requested.lastUsed,
+                        reqTime: requested.usedDates[0],
                         statusCode: proxyRes.statusCode,
                         headers: proxyRes.headers,
                         resTime: Date.now()

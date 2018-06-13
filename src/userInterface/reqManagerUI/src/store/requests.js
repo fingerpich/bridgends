@@ -57,7 +57,7 @@ const actions = {
 // for debugging purposes.
 const processReq = (req) => {
   req.freq = req.usedDates.filter((d) => (Date.now() - d) < 1000 * 60).length;
-  const m = moment(req.lastUsed);
+  const m = moment(req.usedDates[0]);
   req.formatedDate = m.format('H:mm:ss:') + m.millisecond();
   return req;
 };

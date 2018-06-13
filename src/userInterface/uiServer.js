@@ -50,7 +50,7 @@ class uiServer{
                     req.getRespond().then((respond) => {
                         const reqData = req.serialize();
                         reqData.respond = respond;
-                        this.broadCast(reqData);
+                        ws.emit('update', JSON.stringify(reqData));
                     });
                 });
             });
