@@ -2,20 +2,9 @@
 Its a development tool for frontend developer to use some API which are under development.
 
 [![MIT License][license-image]][license-url]
-[license-image]: http://img.shields.io/badge/license-MIT-blue.svg?style=flat
-[license-url]: LICENSE
-
 [![NPM version][npm-version-image]][npm-url]
-[npm-url]: https://npmjs.org/package/bridgends
-[npm-version-image]: http://img.shields.io/npm/v/bridgends.svg?style=flat
-
 [![dependencies Quality][dependencies-quality]][dependencies-quality-url]
-[dependencies-quality]: https://david-dm.org/fingerpich/bridgends.svg
-[dependencies-quality-url]: https://david-dm.org/fingerpich/bridgends
-
 [![dev dependencies Quality][dev-dependencies-quality]][dev-dependencies-quality-url]
-[dev-dependencies-quality]: https://david-dm.org/fingerpich/bridgends/dev-status.svg
-[dev-dependencies-quality-url]: https://david-dm.org/fingerpich/bridgends?type=dev
 
 
 ## Installation
@@ -24,17 +13,20 @@ npm i bridgends -g
 ```
 
 ## Introduction
-It makes http server between frontend developer and APIs which forwards requests to APIs and also cache their response
-then it makes you able to change respond way(api, cache) or define a mock to respond by its user Interface.
+It makes a http server between frontend developer and APIs
+and makes you able to see requests and their responses in its ui
+and change the respond way (api, cache, mock) for each request.
+By default it responds by cache so frontend developer
+would not waste time for api latency or when api is down.
 
-#### Example
-suppose we want to run bridgends on a front end developer's system and
-we have an API on http://192.168.82.198:81/api/
+#### How to run
+Suppose we want to run bridgends on a front end developer's system and
+there is an API on http://192.168.82.198:81/api/
 
  - `npm i bridgends -g`
  - `bridgends start -t http://192.168.82.198:81/ -p 4243 -a /api`
- - change frontend to send all request to `localhost:4243`
-   - if you are using webpack just change [the proxy](https://webpack.js.org/configuration/dev-server/#devserver-proxy
+ - change frontend code to proxy all request through `localhost:4243`
+   - if you are using webpack just change [the proxy](https://webpack.js.org/configuration/dev-server/#devserver-proxy)
    ```
    proxy: {
        "/api": {
@@ -74,3 +66,15 @@ Run multi instance
 bridgends start name
 bridgends stop name
 ```
+
+[license-image]: http://img.shields.io/badge/license-MIT-blue.svg?style=flat
+[license-url]: LICENSE
+
+[npm-url]: https://npmjs.org/package/bridgends
+[npm-version-image]: http://img.shields.io/npm/v/bridgends.svg?style=flat
+
+[dependencies-quality]: https://david-dm.org/fingerpich/bridgends.svg
+[dependencies-quality-url]: https://david-dm.org/fingerpich/bridgends
+
+[dev-dependencies-quality]: https://david-dm.org/fingerpich/bridgends/dev-status.svg
+[dev-dependencies-quality-url]: https://david-dm.org/fingerpich/bridgends?type=dev
