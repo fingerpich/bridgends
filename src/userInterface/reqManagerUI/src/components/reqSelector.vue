@@ -35,7 +35,9 @@ export default {
       return className;
     },
     handleCurrentChange(val) {
-      this.$store.dispatch('setSelectedRequest', val);
+      if (val) {
+        this.$store.dispatch('setSelectedRequest', val);
+      }
     }
   }
 }

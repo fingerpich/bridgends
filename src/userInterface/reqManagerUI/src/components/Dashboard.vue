@@ -4,9 +4,10 @@
       <h4>Bridgends</h4>
     </div>
 
-    <div class="container">
+    <div class="container" :class="{showDetail: showDetail}">
       <request-selector></request-selector>
       <div class="respondContainer" v-if="selectedRequest">
+        <el-button class="backtolist" v-on:click="showDetail=false">back to list</el-button>
         <h3>Respond With</h3>
         <div class="selectRespondWay">
           <el-radio v-for="opt in respondWays" v-model="respondWayType" :key="opt" :value="opt" :label="opt" border></el-radio>
@@ -57,6 +58,7 @@
         if (sr) {
           this.respondW = this.respondWay;
         }
+        this.showDetail = !!sr;
         return sr;
       },
       respondOptions() {
@@ -80,6 +82,7 @@
     created () {},
     data () {
       return {
+        showDetail:false,
         respondWays: [RespondType.MOCK, RespondType.CACHE, RespondType.API],
         respondW: RespondType.API,
         RespondType: RespondType
@@ -103,13 +106,31 @@
   .container{
     display: flex;
     .requestSelector{
-      flex:60%;
-      width:60%;
+      transition: width 0.3s ease;
+      width:100%;
     }
     .respondContainer{
-      flex:40%;
-      width:40%;
+      width:100%;
     }
+    &.showDetail{
+      .requestSelector{
+        width: 0;
+      }
+    }
+    @media screen and (min-width: 900px) {
+      .backtolist{
+        display: none;
+      }
+      &.showDetail{
+        .requestSelector {
+          width: 60%!important;
+        }
+        .respondContainer{
+          width:40%;
+        }
+      }
+    }
+
     .respondWith {
       padding: 10px;
     }
