@@ -49,6 +49,9 @@ export default {
   text-align: center!important;
   padding: 0!important;
 }
+.el-table tr{
+  cursor: pointer;
+}
 .cell{
   padding: 0!important;
 }

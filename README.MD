@@ -1,5 +1,7 @@
 # Bridgends
-Its a development tool for frontend developer to use some API which are under development.
+Its a development tool to show api calls for both team (frontend and backend)
+and it also can show api errors for backend team while it responds frontend team with its cache
+and use some API which are under development.
 
 [![MIT License][license-image]][license-url]
 [![NPM version][npm-version-image]][npm-url]
@@ -13,8 +15,8 @@ npm i bridgends -g
 ```
 
 ## Introduction
-It makes a http server between frontend developer and APIs
-and makes you able to see requests and their responses in its ui
+It designed to run a http server between frontend developer system and
+under development APIs and makes you able to see requests and their responses in its ui
 and change the respond way (api, cache, mock) for each request.
 By default it responds by cache so frontend developer
 would not waste time for api latency or when api is down.
