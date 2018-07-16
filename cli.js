@@ -55,14 +55,15 @@ program
                     process.exit(2);
                 }
                 console.log('bridgends has started');
-                console.log('open http://localhost' +(config.port?':'+config.port:'') + '/ in your browser');
+                const port = cmd.port || config.port;
+                console.log('open http://localhost:' + port + '/ in your browser');
                 pm2.start({
                     name,
                     script: 'index.js',
                     args: (cmd.apiPath? ' --apiPath ' + cmd.apiPath : '') +
                     (cmd.savePath? ' --savePath ' + cmd.savePath : '') +
                     (cmd.port? ' --port ' + cmd.port : '') +
-                    (targets? ' --targets ' + targets : '')
+                    (targets? ' --targets ' + targets : '') +
                     (name? ' --name ' + name : '')
                 }, function (err, apps) {
                     pm2.disconnect();
