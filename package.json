@@ -4,6 +4,7 @@
   "description": "development tool to cache, test, debug, proxy, mock backends API.",
   "main": "index.js",
   "scripts": {
+    "build": "cd src/userInterface/reqManagerUI;npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "postinstall": ""

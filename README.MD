@@ -1,7 +1,5 @@
 # Bridgends
-Its a development tool to show api calls for both team (frontend and backend)
-and it also can show api errors for backend team while it responds frontend team with its cache
-and use some API which are under development.
+Its a development tool to manage and make api calls more reliable, more clear and faster for both team (frontend and backend)
 
 [![MIT License][license-image]][license-url]
 [![NPM version][npm-version-image]][npm-url]
