@@ -17,7 +17,7 @@
           <el-input placeholder="enterName" v-model="newMock.name"></el-input>
         </el-col>
         <el-col :span="8">
-          <el-select v-model="newMock.status" placeholder="status">
+          <el-select v-model="newMock.statusCode" placeholder="status">
             <el-option v-for="item in httpStatus" :key="item" :label="item" :value="item" ></el-option>
           </el-select>
         </el-col>
@@ -25,7 +25,7 @@
           <el-input
             type="textarea"
             placeholder="header"
-            v-model="newMock.header">
+            v-model="newMock.headers">
           </el-input>
         </el-col>
       </el-row>
@@ -74,10 +74,10 @@
         respondWays: [RespondType.MOCK,RespondType.CACHE,RespondType.API],
         dialogTableVisible: false,
         newMock: {
-          status: 200,
+          statusCode: 200,
           name: '',
           body: '',
-          header: '',
+          headers: '',
         },
         newMockError: '',
         isEditing: false,

@@ -47,7 +47,7 @@ class ProxiedRequest {
             } else if (type === RespondTypes.MOCK) {
                 matched = this._getMock(name);
             }
-            return respondFile.load(matched[0].file);
+            return respondFile.load(matched[matched.length - 1].file);
         } else {
             return respondFile.load(this.respondWay.file);
         }

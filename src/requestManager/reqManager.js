@@ -85,7 +85,7 @@ class RequestManager {
                 url = removeFromEnd(url, '&');
                 const lst = this.list.filter((pr) => pr.req.url !== originUrl && pr.req.url.indexOf(url) > -1 && pr.hasCache());
                 if (lst.length) {
-                    return lst[0];
+                    return lst[lst.length - 1];
                 }
             }
         }

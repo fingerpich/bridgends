@@ -46,6 +46,7 @@ class FileResponds {
                 });
             } catch(e) {
                 console.log(e);
+                reject()
             }
         });
     }
