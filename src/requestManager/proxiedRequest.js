@@ -54,10 +54,10 @@ class ProxiedRequest {
 
     }
     _getMocks () {
-        this.respondOptions.filter(ro => ro.type === RespondTypes.MOCK);
+        return this.respondOptions.filter(ro => ro.type === RespondTypes.MOCK);
     }
     _getMock (name) {
-        this._getMocks().filter(ro => ro.name === name);
+        return this._getMocks().filter(ro => ro.name === name);
     }
     hasCache () {
         return this._getCaches().length;
