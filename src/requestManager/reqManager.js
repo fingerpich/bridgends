@@ -16,6 +16,13 @@ class RequestManager {
         const req = this._getMatchRequest(url);
         return this.getApiRespond(req);
     }
+    clearCache (url) {
+        const req = this._getMatchRequest(url);
+        return req.clearCache().then(res => {
+            req.respond = respond;
+            return req.serialize();
+        })
+    }
 
     start (targets, defaultTimeout) {
         this.targets = targets;
@@ -57,18 +64,21 @@ class RequestManager {
                 }
             }
             const alternativeWay = requested.respondWay.alternativeWay;
-
-            if (alternativeWay.type !== RespondTypes.API) {
-                requested.getRespond(alternativeWay.type, alternativeWay.data).then((data) => {
-                    resolve(data);
-                });
-            } else {
-                // It will respond as another request
-                this._getMatchRequest(alternativeWay.data)
-                    .getRespond(RespondTypes.CACHE)
-                    .then((cacheData) => {
-                        resolve(cacheData);
+            if (alternativeWay) {
+                if (alternativeWay.type !== RespondTypes.API) {
+                    requested.getRespond(alternativeWay.type, alternativeWay.data).then((data) => {
+                        resolve(data);
                     });
+                } else {
+                    // It will respond as another request
+                    this._getMatchRequest(alternativeWay.data)
+                        .getRespond(RespondTypes.CACHE)
+                        .then((cacheData) => {
+                            resolve(cacheData);
+                        });
+                }
+            } else {
+                console.log('alternative way is empty');
             }
         });
     }

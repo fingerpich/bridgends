@@ -20,6 +20,11 @@ class uiServer{
                         ws.emit('update', res);
                     });
                 });
+                ws.on('clearCache', (url) => {
+                    reqManager.clearCache(url).then((serialized) => {
+                        ws.emit('update', JSON.stringify(serialized));
+                    });
+                });
                 ws.on('changeRespondWay', ({url, respondWay}) => {
                     const req = reqManager._getMatchRequest(url);
                     req.setRespondWay(respondWay).then((respond) => {

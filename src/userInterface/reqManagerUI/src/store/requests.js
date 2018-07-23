@@ -37,6 +37,15 @@ const actions = {
     if (getters.getType(context.state, selectedWayType).length) {
       const respondWay = getters.getType(context.state, selectedWayType).filter(tway => tway.lastActivated)[0];
       context.dispatch('changeRespondWay', respondWay)
+    } else {
+      context.commit('setSelectedReq', {
+        ...context.state.selectedReq,
+        ...{
+          respondWay: {type: selectedWayType},
+          lastRespondWay: context.state.selectedReq.respondWay.type,
+          respond: null
+        }
+      });
     }
   },
   changeAlternativeWay (context, selectedAlternative) {

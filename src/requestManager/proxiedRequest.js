@@ -120,9 +120,11 @@ class ProxiedRequest {
             params: req.url.split('?')[1]
         };
 
-        setTimeout(() => {
-            this.onTimeout();
-        }, this.timeout * 1000);
+        if (this.onTimeout) {
+            setTimeout(() => {
+                this.onTimeout();
+            }, this.timeout * 1000);
+        }
         this.saveRequestData(req);
 
         this.previousState = this.status;
@@ -157,6 +159,17 @@ class ProxiedRequest {
 
     _getFileName() {
         return ++cacheIDCounter + '' + Date.now();
+    }
+
+    clearCache () {
+        const index = this.respondOptions.findIndex(ro => ro.type === RespondTypes.CACHE)
+        this.respondOptions.splice(index, 1);
+        this.respondOptions
+            .filter(ro => ro.type === RespondTypes.API && ro.alternativeWay.type === RespondTypes.CACHE)
+            .forEach(ro => ro.alternativeWay = null)
+        if (this.respondWay.type === RespondTypes.CACHE) {
+            return this.setRespondWay(this.respondOptions[index - 1]);
+        }
     }
 
     cacheResponse (apiResponded) {

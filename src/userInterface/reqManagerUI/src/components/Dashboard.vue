@@ -15,13 +15,22 @@
 
         <!--MOCK-->
         <div class="respondWith" v-if="respondWayType === RespondType.MOCK">
+          <div v-if="!selectedRequest.respond">
+            there is no mock please add a new one, this still is using {{selectedRequest.lastRespondWay}} to respond requests
+          </div>
           <handle-mock ></handle-mock>
         </div>
 
         <!--CACHE-->
         <div class="respondWith" v-if="respondWayType === RespondType.CACHE">
           <h4>Cache</h4>
-          <long-text :text="selectedRequest.respond && selectedRequest.respond.body"></long-text>
+          <div v-if="selectedRequest.respond">
+            <long-text :text="selectedRequest.respond && selectedRequest.respond.body"></long-text>
+            <el-button v-on:click="clearCache">clear cache</el-button>
+          </div>
+          <div v-else>
+            This request has not cached yet, this still is using {{selectedRequest.lastRespondWay}} to respond requests
+          </div>
         </div>
 
         <!--API-->
@@ -89,6 +98,9 @@
       }
     },
     methods: {
+      clearCache: function() {
+        this.$socket.emit('clearCache', this.selectedRequest.req.url);
+      }
     }
   }
 </script>
