@@ -3,7 +3,8 @@ let cacheIDCounter = 111;
 const RespondTypes = require('./respondType.js');
 const respondFile = require('../respondFiles/respondFile.js');
 class ProxiedRequest {
-    constructor (req, targets, defaultTimeout) {
+    constructor (req, defaultTimeout, isContainer) {
+        this.isContainer = !!isContainer;
         this.usedDates = [];
         this.reqFileName = 0;
         if (req) {
@@ -12,24 +13,27 @@ class ProxiedRequest {
         if (!this.timeout) {
             this.timeout = defaultTimeout;
         }
-        if (!this.respondOptions && targets) {
-            this.respondOptions = targets.map((target, i) => {
-                return {type: RespondTypes.API, target, file: this._getFileName()}
-            });
-        }
         if (!this.respondWay) {
             this.respondWay = this.respondOptions[0];
             this.respondWay.lastActivated = true;
         }
     }
-
-    matchUrl (url) {
-        return this.req.url === url
+    matchExactly (url, method) {
+        return (this.req.url === url && method === this.req.method);
+    }
+    matchUrl (url, method) {
+        if (this.isContainer) {
+            return url.includes(this.req.url);
+        } else if (this.req.url === url && method === this.req.method) {
+            return true;
+        }
+        return false;
     }
 
     serialize () {
         return {
             req: this.req,
+            isContainer: this.isContainer,
             timeout: this.timeout,
             status: this.status,
             usedDates: this.usedDates,
@@ -93,6 +97,13 @@ class ProxiedRequest {
         return this.respondOptions.filter(ro => ro.type === RespondTypes.API && ro.lastActivated)[0].target;
     }
 
+    setTarget() {
+        this.target = target;
+    }
+    getTarget () {
+        return this.target;
+    }
+
     saveRequestData (req) {
         if (!this.reqFileName){
             this.reqFileName = this._getFileName();
@@ -113,23 +124,26 @@ class ProxiedRequest {
     }
 
     requested (req) {
-        this.req = {
-            url: req.url,
-            method: req.method,
-            baseUrl: req.url.split('?')[0],
-            params: req.url.split('?')[1]
-        };
+        if (this.isContainer) {
+            this.lastChildReq = req;
+        } else {
+            this.req = {
+                url: req.url,
+                method: req.method,
+                baseUrl: req.url.split('?')[0],
+                params: req.url.split('?')[1]
+            };
 
-        if (this.onTimeout) {
-            setTimeout(() => {
-                this.onTimeout();
-            }, this.timeout * 1000);
+            if (this.onTimeout) {
+                setTimeout(() => {
+                    this.onTimeout();
+                }, this.timeout * 1000);
+            }
+            this.saveRequestData(req);
+
+            this.previousState = this.status;
+            this.status = 0;
         }
-        this.saveRequestData(req);
-
-        this.previousState = this.status;
-        this.status = 0;
-
         this.usedDates.unshift(Date.now());
         if (this.usedDates.length > 10) this.usedDates.pop();
         this.lastUsed = this.usedDates[0];

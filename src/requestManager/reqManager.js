@@ -13,11 +13,11 @@ class RequestManager {
     }
 
     testAPI (url) {
-        const req = this._getMatchRequest(url);
+        const req = this.getExactRequest(url);
         return this.getApiRespond(req);
     }
     clearCache (url) {
-        const req = this._getMatchRequest(url);
+        const req = this.getExactRequest(url);
         return req.clearCache().then(res => {
             req.respond = respond;
             return req.serialize();
@@ -32,53 +32,51 @@ class RequestManager {
             this.list = parsed.map((rq) => {
                 return new proxiedRequest(rq);
             });
+        }).then(() => {
+            if (!this.list.filter(r => r.matchUrl('/')).length) {
+                this.list.push(new proxiedRequest({req: {url:'/'}}, this.defaultTimeout, true));
+            }
         });
+
         // Update requests file in every 10 minute
         setInterval(() => {
             respondFile.save(this.serialize(), fileName);
         },1000 * 10);
     }
 
-    _getMatchRequest (url) {
-        const matches = this.list.filter(r => r.matchUrl(url));
-        let match;
-        if (!matches.length) {
-            match = new proxiedRequest(null, this.targets, this.defaultTimeout);
-            this.list.push(match);
-        } else {
-            match = matches[0];
-        }
-        return match;
+    getExactRequest (url, method) {
+        return this.list.filters(r => r.matchExactly(url, method));
+    }
+    getRequestAndParents(url, method) {
+        return this.list.filter(r => r.matchUrl(url, method));
     }
 
     respondAlternatives (url) {
         return new Promise((resolve, reject) => {
-            const requested = this._getMatchRequest(url);
-            if (!requested.respondWay.alternativeWay) {
-                const simReq = this.findSimilarCachedRequest(url);
-                if (simReq) {
-                    requested.setAlternativeWay({type: RespondTypes.API, data: simReq.req.url, auto: true});
-                } else {
-                    reject('can not find any similar cached request for' + requested.req.url);
-                    return;
-                }
-            }
+            const requested = this.getExactRequest(url);
             const alternativeWay = requested.respondWay.alternativeWay;
             if (alternativeWay) {
-                if (alternativeWay.type !== RespondTypes.API) {
-                    requested.getRespond(alternativeWay.type, alternativeWay.data).then((data) => {
-                        resolve(data);
-                    });
-                } else {
+                if (alternativeWay.type === RespondTypes.API) {
                     // It will respond as another request
-                    this._getMatchRequest(alternativeWay.data)
+                    this.getExactRequest(alternativeWay.data)
                         .getRespond(RespondTypes.CACHE)
                         .then((cacheData) => {
                             resolve(cacheData);
                         });
+
+                } else {
+                    requested.getRespond(alternativeWay.type, alternativeWay.data).then((data) => {
+                        resolve(data);
+                    });
                 }
             } else {
-                console.log('alternative way is empty');
+                const simReq = this.findSimilarCachedRequest(url);
+                if (simReq) {
+                    requested.setAlternativeWay({type: RespondTypes.API, data: simReq.req.url, auto: true});
+                    return this.respondAlternatives(url);
+                } else {
+                    reject('can not find any similar cached request for' + requested.req.url);
+                }
             }
         });
     }
@@ -103,11 +101,26 @@ class RequestManager {
         return 0;
     }
 
+    setRequestAccessedAndGetTarget (req) {
+        // TODO: add a container request if there is some request with the same base url which has not added before
+        const matches = this.getRequestAndParents(req.url, req.method);
+        if(!matches.filter(r => r.req.url === req.url).length) {
+            const req = new proxiedRequest(null, this.defaultTimeout);
+            this.list.push(req);
+            matches.push(req);
+        }
+        matches.forEach(r => r.requested(req));
+        const targets = matches
+            .filter(r => r.isContainer)
+            .sort((a, b) => a.req.url.length - b.req.url.length)
+            .map(r => {r.getTarget()})
+            .filter(t => !!t);
+        if (targets.length) {
+            return targets[targets.length - 1]; // its nearest parent which has set target
+        } else {
+            return '0.0.0.0';
+        }
 
-    accessed (req) {
-        const match = this._getMatchRequest(req.url);
-        match.requested(req);
-        return match;
     }
 }
 
