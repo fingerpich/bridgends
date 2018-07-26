@@ -10,6 +10,26 @@ const state = {
 
 // getters
 const getters = {
+  treeRequests: state => {
+    const count = (str, regex) => (str.match(regex) || []).length;
+    const containers = state.requests.map(r => ({r, s: count(r.req.url, /(\/|\&|\?)/g)}));
+    containers.sort((a, b) => a.s - b.s);
+    const flattenTree = [];
+    const tree = [];
+    containers.forEach(({r,s}) => {
+      const newItem = {id:r.req.url, label: r.req.url, children:[]};
+      if (flattenTree.length) {
+        const ancestors = flattenTree.filter(item => r.req.url.includes(item.id));
+        const parent = ancestors.reduce((acc, item) => item.id.length > acc.id.length ? item : acc, flattenTree[0]);
+        newItem.label = newItem.label.slice(parent.label.length);
+        parent.children.push(newItem);
+      } else {
+        tree.push(newItem);
+      }
+      flattenTree.push(newItem);
+    });
+    return tree;
+  },
   allRequests: state => state.requests,
   selectedRequest: state => state.selectedReq,
   getType: (state, type) => state.selectedReq.respondOptions.filter(res => res.type === type),

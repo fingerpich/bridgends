@@ -1,5 +1,14 @@
 <template>
   <div class="requestSelector">
+    <el-tree
+      class="filter-tree"
+      :data="reqTree"
+      :props="defaultProps"
+      default-expand-all
+      :filter-node-method="filterNode"
+      ref="tree2">
+    </el-tree>
+
     <el-table :data="reqList"  :default-sort = "{prop: 'req.baseUrl', order: 'descending'}"
               highlight-current-row @current-change="handleCurrentChange" style="width: 100%" :row-class-name="tableRowClassName">
       <el-table-column width="300" sortable prop="req.baseUrl" label="url"></el-table-column>
@@ -16,6 +25,7 @@
 export default {
   name: 'RequestSelector',
   computed: mapGetters({
+    reqTree: 'treeRequests',
     reqList: 'allRequests',
     currentRow: 'selectedRequest',
   }),
@@ -60,20 +70,8 @@ export default {
   background: #a0cdff!important;
 }
 
-@mixin keyframes($name) {
-  @-webkit-keyframes #{$name} { @content; }
-  @-moz-keyframes #{$name} { @content; }
-  @-ms-keyframes #{$name} { @content; }
-  @keyframes #{$name} { @content; }
-}
-@include keyframes(flashing) {
-  0% { background-color: #00ff22; }
-  50% { background-color: #c9ffce; }
-  100% { background-color: #ffffff; }
-}
-.flash{
-  animation-name: flashing;
-  animation-duration: 0.3s;
+.flash {
+  background: #00ff22;
 }
 .el-table .cell {
   word-break: normal!important;

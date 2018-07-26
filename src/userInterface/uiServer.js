@@ -26,7 +26,7 @@ class uiServer{
                     });
                 });
                 ws.on('changeRespondWay', ({url, respondWay}) => {
-                    const req = reqManager._getMatchRequest(url);
+                    const req = reqManager.getExactRequest(url);
                     req.setRespondWay(respondWay).then((respond) => {
                         const reqData = req.serialize();
                         reqData.respond = respond;
@@ -35,23 +35,23 @@ class uiServer{
                 });
 
                 ws.on('addNewMock', ({url, newMock}) => {
-                    const req = reqManager._getMatchRequest(url);
+                    const req = reqManager.getExactRequest(url);
                     req.addMock(newMock);
                     this.broadCast(req.serialize());
                 });
                 ws.on('removeMock', ({url, mock}) => {
-                    const req = reqManager._getMatchRequest(url);
+                    const req = reqManager.getExactRequest(url);
                     req.removeMock(mock);
                     this.broadCast(req.serialize());
                 });
                 ws.on('editMock', ({url, newMock}) => {
-                    const req = reqManager._getMatchRequest(url);
+                    const req = reqManager.getExactRequest(url);
                     req.editMock(newMock);
                     this.broadCast(req.serialize());
                 });
 
                 ws.on('getRespond', ({url}) => {
-                    const req = reqManager._getMatchRequest(url);
+                    const req = reqManager.getExactRequest(url);
                     req.getRespond().then((respond) => {
                         const reqData = req.serialize();
                         reqData.respond = respond;

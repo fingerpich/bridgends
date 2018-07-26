@@ -19,7 +19,7 @@ class Bridgends {
         }
     }
     getResp (url) {
-        const requested = reqManager._getMatchRequest(url);
+        const requested = reqManager.getExactRequest(url);
         const respondWay = requested.getRespondWay();
         if (respondWay.type !== RespondTypes.API) { // Its Mock or Cache
             return respondFile.load(respondWay.file);
@@ -32,14 +32,13 @@ class Bridgends {
         return proxy({
             target: this.config.targets[0],
             router: (req) => {
-                const requested = reqManager.accessed(req);
-                return requested.getSelectedTarget();
+                return reqManager.setRequestAccessedAndGetTarget(req);
             },
             onError: (err) => {
 
             },
             onProxyReq: (proxyReq, req, res) => {
-                const requested = reqManager._getMatchRequest(req.url);
+                const requested = reqManager.getExactRequest(req.url);
                 uiServer.broadCast(requested.serialize());
 
                 const respondWay = requested.getRespondWay();
@@ -58,7 +57,7 @@ class Bridgends {
                 }
             },
             onProxyRes: (proxyRes, req, res) => {
-                const requested = reqManager._getMatchRequest(req.url);
+                const requested = reqManager.getExactRequest(req.url);
                 let body = '';
                 proxyRes.on('data', (data) => {
                     data = data.toString('utf-8');
