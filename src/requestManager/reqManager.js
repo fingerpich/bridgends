@@ -97,17 +97,70 @@ class RequestManager {
                 }
             }
         }
-
         return 0;
     }
 
+    // add container requests whenever childrens gets more than what user can handle them
+    normalizeTreeByAddingContainer () {
+        const sensitiveCount = 5;
+        // this.list.forEach(r => r.parent = null);
+        const containers = this.list.filter(r => r.isContainer);
+
+        // get containers and all child which are in nested tree of this container
+        const containersChildCounts = containers.map(cr => {
+            return {container: cr, childCounts: this.list.filter(r => r.req.url.includes(cr.req.url)).length};
+        });
+
+        // update container count to children which are child of this container not a grand child
+        containersChildCounts
+            .sort((a, b) => a.childCounts - b.childCounts)
+            .forEach(crcc => {
+                const childs = this.list
+                    .filter(r => !r.parent && r.req.url.includes(crcc.container.req.url))
+                // childs.forEach(r => r.parent = crcc.container);
+                crcc.childs = childs;
+                crcc.childCounts = childs.length;
+            });
+
+        // filter containers which has more than 5 child
+        const branchingContainers = containersChildCounts
+            .filter(crcc => crcc.childCounts > sensitiveCount)
+
+        branchingContainers.forEach((bc) => {
+            const slicedUrls = bc.childs.map(c => c.req.url.slice(bc.container.req.url.length))
+            const candidates = slicedUrls.map(url => {
+                const candidate = [url];
+                while(url){
+                    url = url.slice(0, /(\/|\&|\?)/g.test(url).lastIndex);
+                    candidate.push(url)
+                }
+                return candidate;
+            })
+            candidates
+                .map(candid => {
+                    let cover = slicedUrls.filter(url => url.indexOf(candid) === 0).length;
+                    if (cover === slicedUrls.length) { cover = 0; }
+                    return {candid, cover };
+                })
+                .sort((cc1, cc2) => {
+                    // sort which includes more request and then sort by length of common string in url
+                    return cc2.cover - cc1.cover || cc2.candid.length - cc1.candid.length
+                });
+            const bestCandidate = candidates[0];
+            if (bestCandidate.cover > (slicedUrls.length / 2)) {
+                const req = new proxiedRequest({req:{url: bc.container.req.url + bestCandidate.candid}}, this.defaultTimeout);
+                this.list.push(req)
+            }
+        })
+    }
+
     setRequestAccessedAndGetTarget (req) {
-        // TODO: add a container request if there is some request with the same base url which has not added before
         const matches = this.getRequestAndParents(req.url, req.method);
-        if(!matches.filter(r => r.req.url === req.url).length) {
+        if (!matches.filter(r => r.req.url === req.url).length) {
             const req = new proxiedRequest(null, this.defaultTimeout);
             this.list.push(req);
             matches.push(req);
+            this.normalizeTreeByAddingContainer();
         }
         matches.forEach(r => r.requested(req));
         const targets = matches
@@ -120,7 +173,6 @@ class RequestManager {
         } else {
             return '0.0.0.0';
         }
-
     }
 }
 
