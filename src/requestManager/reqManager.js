@@ -154,16 +154,20 @@ class RequestManager {
         })
     }
 
-    setRequestAccessedAndGetTarget (req) {
-        const matches = this.getRequestAndParents(req.url, req.method);
+    addNewRequestIfItsNotExist (req, list) {
         if (!matches.filter(r => r.req.url === req.url).length) {
+            // the request is new so we have to add it to the list
             const req = new proxiedRequest(null, this.defaultTimeout);
             this.list.push(req);
             matches.push(req);
             this.normalizeTreeByAddingContainer();
         }
-        matches.forEach(r => r.requested(req));
-        const targets = matches
+    }
+    markRequestsPulsed (req, list) {
+        list.forEach(r => r.requested(req));
+    }
+    getTarget(list) {
+        const targets = list
             .filter(r => r.isContainer)
             .sort((a, b) => a.req.url.length - b.req.url.length)
             .map(r => {r.getTarget()})

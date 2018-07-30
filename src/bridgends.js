@@ -32,7 +32,10 @@ class Bridgends {
         return proxy({
             target: this.config.targets[0],
             router: (req) => {
-                return reqManager.setRequestAccessedAndGetTarget(req);
+                const list = reqManager.getRequestAndParents(req.url, req.method);
+                reqManager.addNewRequestIfItsNotExist(req, list); // list will update if it was a new request
+                reqManager.markRequestsPulsed(req, list);
+                return reqManager.getTarget(list);
             },
             onError: (err) => {
 
