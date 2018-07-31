@@ -95,7 +95,7 @@ class Bridgends {
         const app = express();
         respondFile.start({dir: config.savePath, instanceName: config.name});
         reqManager.start(config.targets, config.requestTimeout);
-        app.use(config.apiPath, this._cacheMiddleWare());
+        app.use(config.proxyPath, this._cacheMiddleWare());
         app.use(config.uiPath, uiServer.uiMiddleware(app));
         const httpServer = app.listen(config.port, '0.0.0.0', () => {
             console.log(`open http://localhost:${config.port + config.uiPath}!`);

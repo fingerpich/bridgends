@@ -66,11 +66,11 @@ class uiServer{
     }
 
     uiMiddleware(app) {
-        const uiPath = path.join(__dirname, './public');
-        app.use(express.static(uiPath));
+        const uiFilesPath = path.join(__dirname, './public');
+        app.use(express.static(uiFilesPath));
         // define the home page route
         router.get('/', function (req, res) {
-            res.sendFile(uiPath + '/index.html');
+            res.sendFile(uiFilesPath + '/index.html');
         });
 
         return router

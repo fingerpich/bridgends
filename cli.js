@@ -31,7 +31,6 @@ program
     .description('start new instance of bridgends')
     .option('-t, --targets <targets>', 'set api targets', list => list.split(','))
     .option('-f, --save-path [value]', 'Set files path')
-    .option('-a, --api-path [value]', 'Set api path')
     .option('-p, --port [value]', 'set instance port')
     .action((name, cmd) => {
         const filePath = cmd.savePath || config.savePath;
@@ -56,7 +55,7 @@ program
                 }
                 console.log('bridgends has started');
                 const port = cmd.port || config.port;
-                const args = (cmd.apiPath? ' --apiPath ' + cmd.apiPath : '') +
+                const args =
                     (cmd.savePath? ' --savePath ' + cmd.savePath : '') +
                     (cmd.port? ' --port ' + cmd.port : '') +
                     (targets? ' --targets ' + targets : '') +
