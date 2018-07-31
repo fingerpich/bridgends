@@ -34,18 +34,20 @@ class RequestManager {
             });
         }).then(() => {
             if (!this.list.filter(r => r.matchUrl('/')).length) {
-                this.list.push(new proxiedRequest({req: {url:'/'}}, this.defaultTimeout, true));
+                const root = new proxiedRequest({req: {url:'/'}}, this.defaultTimeout, true);
+                root.setTarget(this.targets[0]);
+                this.list.push(root);
             }
         });
 
         // Update requests file in every 10 minute
         setInterval(() => {
             respondFile.save(this.serialize(), fileName);
-        },1000 * 10);
+        }, 1000 * 10);
     }
 
     getExactRequest (url, method) {
-        return this.list.filters(r => r.matchExactly(url, method));
+        return this.list.find(r => r.matchExactly(url, method));
     }
     getRequestAndParents(url, method) {
         return this.list.filter(r => r.matchUrl(url, method));
@@ -155,11 +157,11 @@ class RequestManager {
     }
 
     addNewRequestIfItsNotExist (req, list) {
-        if (!matches.filter(r => r.req.url === req.url).length) {
+        if (!list.filter(r => r.req.url === req.url).length) {
             // the request is new so we have to add it to the list
             const req = new proxiedRequest(null, this.defaultTimeout);
             this.list.push(req);
-            matches.push(req);
+            list.push(req);
             this.normalizeTreeByAddingContainer();
         }
     }

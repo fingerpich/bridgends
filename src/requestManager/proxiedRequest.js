@@ -8,15 +8,13 @@ class ProxiedRequest {
         this.usedDates = [];
         this.reqFileName = 0;
         if (req) {
-            Object.assign(this, req);
+            this.req = req;
         }
         if (!this.timeout) {
             this.timeout = defaultTimeout;
         }
-        if (!this.respondWay) {
-            this.respondWay = this.respondOptions[0];
-            this.respondWay.lastActivated = true;
-        }
+        this.respondOptions = [{type: RespondTypes.API, file: this._getFileName(), lastActivated: true}];
+        this.respondWay = this.respondOptions[0];
     }
     matchExactly (url, method) {
         return (this.req.url === url && method === this.req.method);
@@ -97,7 +95,7 @@ class ProxiedRequest {
         return this.respondOptions.filter(ro => ro.type === RespondTypes.API && ro.lastActivated)[0].target;
     }
 
-    setTarget() {
+    setTarget(target) {
         this.target = target;
     }
     getTarget () {
