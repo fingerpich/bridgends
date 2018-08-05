@@ -31,6 +31,7 @@ class ProxiedRequest {
             req: this.req,
             isContainer: this.isContainer,
             timeout: this.timeout,
+            target: this.target,
             status: this.status,
             usedDates: this.usedDates,
             respondOptions : this.respondOptions,
@@ -94,7 +95,11 @@ class ProxiedRequest {
     }
 
     setTarget(target) {
-        this.target = target;
+        if (/(\.|\/)/g.test(target)) {
+            this.target = target;
+        } else {
+            this.target = ''
+        }
     }
     getTarget () {
         return this.target;

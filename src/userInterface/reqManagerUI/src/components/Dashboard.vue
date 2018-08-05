@@ -9,7 +9,9 @@
       <div class="respondContainer" v-if="selectedRequest">
         <el-button class="backtolist" v-on:click="showDetail=false">back to list</el-button>
         <div>{{selectedRequest.req.url}}</div>
-        <div>|</div>
+        <div>|
+          <el-button class="showManageHeader" v-on:click="showDetail=false">h</el-button>
+        </div>
         <api-target-selector></api-target-selector>
         <h3>Respond With</h3>
         <div class="selectRespondWay">
@@ -110,12 +112,13 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss">
   .header{
-    padding: 1px 20px;
+    padding: 17px 20px;
     margin: 0 0 30px;
-    color: #777;
-    text-shadow: 0 0 7px #ccc;
-    text-align: left;
-    box-shadow: 0 0 5px 0 #ccc;
+    background: #797979;
+    h4{
+      font-weight: normal;
+      margin: 0;
+    }
   }
   .container{
     display: flex;

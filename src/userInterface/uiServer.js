@@ -28,6 +28,16 @@ class uiServer{
                         this.broadCast(reqData);
                     });
                 });
+
+                ws.on('changeTarget', ({req, target}) => {
+                    const pReq = reqManager.getExactRequest(req.url, req.method);
+                    pReq.setTarget(target);
+                    const reqData = pReq.serialize();
+                    // TODO: get new target respond and fill the respond
+                    // reqData.respond = respond;
+                    this.broadCast(reqData);
+                });
+
                 ws.on('changeRespondWay', ({req, respondWay}) => {
                     const pReq = reqManager.getExactRequest(req.url, req.method);
                     pReq.setRespondWay(respondWay).then((respond) => {

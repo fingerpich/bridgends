@@ -1,8 +1,8 @@
 <template>
   <div class="requestSelector">
     <div class="pad10">
-      <el-input
-        placeholder="Filter keyword"
+      <el-input class="filterReq"
+        placeholder="Filter URL"
         v-model="filterText">
       </el-input>
       <el-tree
@@ -101,17 +101,37 @@ export default {
 .el-table .cell {
   word-break: normal!important;
 }
+.el-tree{
+  margin: 10px 0;
+}
+.el-tree-node__content{
+  height: inherit;
+  padding: 11px 0;
+}
+.filterReq .el-input__inner{
+  border: none;
+  border-bottom: 1px solid #ddd;
+}
+.el-tree-node__expand-icon{
+  padding: 0 6px !important;
+  font-size: 20px;
+}
   .node{
     display: flex;
     flex: 1 1 auto;
+    font-size: 0.8rem;
     .p{
       flex: 1 1 auto;
       text-overflow: ellipsis;
       display: block;
       overflow: hidden;
-      margin: 10px;
-      max-width: 100px;
+      text-align: center;
+      margin: 0px;
+      max-width: 15%;
+      &.name {
+        text-align: left;
+        max-width: 40%;
+      }
     }
   }
-
 </style>

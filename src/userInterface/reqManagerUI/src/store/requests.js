@@ -7,6 +7,7 @@ const state = {
   requests: [],
   selectedReq: null,
 }
+const INHERIT = 'Inherit';
 
 // getters
 const getters = {
@@ -30,6 +31,19 @@ const getters = {
     });
     return tree;
   },
+  getAllTargets: state => {
+    const list = Object.keys(state.requests.reduce((targets, r) => {
+      if(r.target) targets[r.target] = 1;
+      return targets;
+    }, {}));
+    if (state.selectedReq.req.url !== '/') {
+      list.push(INHERIT);
+    }
+    return list;
+  },
+  getSelectedRequestTarget: state => {
+    return state.selectedReq.target || INHERIT
+  },
   allRequests: state => state.requests,
   selectedRequest: state => state.selectedReq,
   getType: (state, type) => state.selectedReq.respondOptions.filter(res => res.type === type),
@@ -51,6 +65,11 @@ const actions = {
     const data = {req: getters.selectedRequest(context.state).req, respondWay};
     this._vm.$socket.emit('changeRespondWay', data);
     context.commit('changeRespondWay', data.respondWay);
+  },
+
+  changeTarget(context, target) {
+    const data = {req: getters.selectedRequest(context.state).req, target};
+    this._vm.$socket.emit('changeTarget', data);
   },
 
   changeRespondWayType (context, selectedWayType) {
