@@ -18,22 +18,19 @@ class Bridgends {
             res.end(data.body);
         }
     }
-    getResp (url) {
-        const requested = reqManager.getExactRequest(url);
-        const respondWay = requested.getRespondWay();
-        if (respondWay.type !== RespondTypes.API) { // Its Mock or Cache
-            return respondFile.load(respondWay.file);
-        } else {
-            Promise.reject('its API');
-        }
-    }
 
     _cacheMiddleWare () {
+        const removeProxy = (req) => {
+            req.url = req.url.replace(this.config.proxyPath, '');
+        }
         return proxy({
             target: this.config.targets[0],
+            pathRewrite: {[this.config.proxyPath]: ''},
             router: (req) => {
+                // it will re-target option.target for specific requests
+                removeProxy(req);
+                reqManager.addNewRequestIfItsNotExist(req); // list will update if it was a new request
                 const list = reqManager.getRequestAndParents(req.url, req.method);
-                reqManager.addNewRequestIfItsNotExist(req, list); // list will update if it was a new request
                 reqManager.markRequestsPulsed(req, list);
                 return reqManager.getTarget(list);
             },
@@ -41,7 +38,8 @@ class Bridgends {
 
             },
             onProxyReq: (proxyReq, req, res) => {
-                const requested = reqManager.getExactRequest(req.url);
+                removeProxy(req);
+                const requested = reqManager.getExactRequest(req.url,req.method);
                 uiServer.broadCast(requested.serialize());
 
                 const respondWay = requested.getRespondWay();
@@ -60,7 +58,8 @@ class Bridgends {
                 }
             },
             onProxyRes: (proxyRes, req, res) => {
-                const requested = reqManager.getExactRequest(req.url);
+                removeProxy(req);
+                const requested = reqManager.getExactRequest(req.url, req.method);
                 let body = '';
                 proxyRes.on('data', (data) => {
                     data = data.toString('utf-8');
@@ -77,7 +76,7 @@ class Bridgends {
                     if (requested.isValidResponse(envelope)) {
                         this.respondClient(res, envelope);
                     } else {
-                        reqManager.respondAlternatives(req.url).then((data) => {
+                        reqManager.respondAlternatives(req.url, req.method).then((data) => {
                             this.respondClient(res, data);
                         }, (err) => {
                             console.log(err);
@@ -95,7 +94,10 @@ class Bridgends {
         const app = express();
         respondFile.start({dir: config.savePath, instanceName: config.name});
         reqManager.start(config.targets, config.requestTimeout);
-        app.use(config.proxyPath, this._cacheMiddleWare());
+        app.use(config.proxyPath, (req, res, next)=> {
+            // req.url = req.url.split(config.proxyPath)[1];
+            next();
+        }, this._cacheMiddleWare());
         app.use(config.uiPath, uiServer.uiMiddleware(app));
         const httpServer = app.listen(config.port, '0.0.0.0', () => {
             console.log(`open http://localhost:${config.port + config.uiPath}!`);

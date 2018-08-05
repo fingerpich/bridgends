@@ -7,9 +7,7 @@ class ProxiedRequest {
         this.isContainer = !!isContainer;
         this.usedDates = [];
         this.reqFileName = 0;
-        if (req) {
-            this.req = req;
-        }
+        if (req) { Object.assign(this, req); }
         if (!this.timeout) {
             this.timeout = defaultTimeout;
         }
@@ -178,7 +176,7 @@ class ProxiedRequest {
         this.respondOptions.splice(index, 1);
         this.respondOptions
             .filter(ro => ro.type === RespondTypes.API && ro.alternativeWay.type === RespondTypes.CACHE)
-            .forEach(ro => ro.alternativeWay = null)
+            .forEach(ro => ro.alternativeWay = null);
         if (this.respondWay.type === RespondTypes.CACHE) {
             return this.setRespondWay(this.respondOptions[index - 1]);
         }

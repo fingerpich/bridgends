@@ -12,33 +12,34 @@ class RequestManager {
         return this.list.map(r => r.serialize());
     }
 
-    testAPI (url) {
-        const req = this.getExactRequest(url);
-        return this.getApiRespond(req);
+    deserialize (list) {
+        this.list = list.map((rq) => {return new proxiedRequest(rq);});
+        this.addRootUrl();
     }
-    clearCache (url) {
-        const req = this.getExactRequest(url);
-        return req.clearCache().then(res => {
-            req.respond = respond;
-            return req.serialize();
-        })
+
+    addRootUrl () {
+        if (!this.list.find(r => r.matchUrl('/'))) {
+            const root = new proxiedRequest({req: {url: '/'}}, this.defaultTimeout, true);
+            root.setTarget(this.targets[0]);
+            this.list.push(root);
+        }
+    }
+
+    testAPI (url, method) {
+        const req = this.getExactRequest(url, method);
+        return this.getApiRespond(req);
     }
 
     start (targets, defaultTimeout) {
         this.targets = targets;
         this.defaultTimeout = defaultTimeout;
-
-        respondFile.load(fileName).then((parsed) => {
-            this.list = parsed.map((rq) => {
-                return new proxiedRequest(rq);
-            });
-        }).then(() => {
-            if (!this.list.filter(r => r.matchUrl('/')).length) {
-                const root = new proxiedRequest({req: {url:'/'}}, this.defaultTimeout, true);
-                root.setTarget(this.targets[0]);
-                this.list.push(root);
-            }
-        });
+        if (respondFile.has(fileName)) {
+            respondFile.load(fileName).then((parsed) => {
+                this.deserialize(parsed);
+            })
+        } else {
+            this.addRootUrl();
+        }
 
         // Update requests file in every 10 minute
         setInterval(() => {
@@ -53,14 +54,14 @@ class RequestManager {
         return this.list.filter(r => r.matchUrl(url, method));
     }
 
-    respondAlternatives (url) {
+    respondAlternatives (url, method) {
         return new Promise((resolve, reject) => {
-            const requested = this.getExactRequest(url);
+            const requested = this.getExactRequest(url, method);
             const alternativeWay = requested.respondWay.alternativeWay;
             if (alternativeWay) {
                 if (alternativeWay.type === RespondTypes.API) {
                     // It will respond as another request
-                    this.getExactRequest(alternativeWay.data)
+                    this.getExactRequest(alternativeWay.data, method)
                         .getRespond(RespondTypes.CACHE)
                         .then((cacheData) => {
                             resolve(cacheData);
@@ -72,10 +73,10 @@ class RequestManager {
                     });
                 }
             } else {
-                const simReq = this.findSimilarCachedRequest(url);
+                const simReq = this.findSimilarCachedRequest(url, method);
                 if (simReq) {
                     requested.setAlternativeWay({type: RespondTypes.API, data: simReq.req.url, auto: true});
-                    return this.respondAlternatives(url);
+                    return this.respondAlternatives(url, method);
                 } else {
                     reject('can not find any similar cached request for' + requested.req.url);
                 }
@@ -83,7 +84,8 @@ class RequestManager {
         });
     }
 
-    findSimilarCachedRequest (originUrl) {
+    findSimilarCachedRequest (originUrl, method) {
+        // TODO: use method
         let url = originUrl;
         const removeFromEnd = (url, char) => {
             return url.slice(0, url.lastIndexOf(char));
@@ -156,13 +158,14 @@ class RequestManager {
         })
     }
 
-    addNewRequestIfItsNotExist (req, list) {
-        if (!list.filter(r => r.req.url === req.url).length) {
-            // the request is new so we have to add it to the list
-            const req = new proxiedRequest(null, this.defaultTimeout);
-            this.list.push(req);
-            list.push(req);
-            this.normalizeTreeByAddingContainer();
+    addNewRequestIfItsNotExist (req) {
+        if (!this.list.find(r => r.matchExactly(req.url, req.method))) {
+            this.list.push(new proxiedRequest({req}, this.defaultTimeout));
+            try {
+                this.normalizeTreeByAddingContainer();
+            } catch(e) {
+                console.log(e);
+            }
         }
     }
     markRequestsPulsed (req, list) {
@@ -172,7 +175,7 @@ class RequestManager {
         const targets = list
             .filter(r => r.isContainer)
             .sort((a, b) => a.req.url.length - b.req.url.length)
-            .map(r => {r.getTarget()})
+            .map(r => r.getTarget())
             .filter(t => !!t);
         if (targets.length) {
             return targets[targets.length - 1]; // its nearest parent which has set target
