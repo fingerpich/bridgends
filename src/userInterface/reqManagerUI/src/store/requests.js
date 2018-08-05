@@ -17,7 +17,7 @@ const getters = {
     const flattenTree = [];
     const tree = [];
     containers.forEach(({r,s}) => {
-      const newItem = {id:r.req.url, label: r.req.url, children:[]};
+      const newItem = {id:r.req.url, label: r.req.url, children: [], req: r};
       if (flattenTree.length) {
         const ancestors = flattenTree.filter(item => r.req.url.includes(item.id));
         const parent = ancestors.reduce((acc, item) => item.id.length > acc.id.length ? item : acc, flattenTree[0]);
@@ -48,7 +48,7 @@ const actions = {
   },
 
   changeRespondWay (context, respondWay) {
-    const data = {url: getters.selectedRequest(context.state).req.url, respondWay};
+    const data = {req: getters.selectedRequest(context.state).req, respondWay};
     this._vm.$socket.emit('changeRespondWay', data);
     context.commit('changeRespondWay', data.respondWay);
   },
@@ -76,7 +76,7 @@ const actions = {
 
   setSelectedRequest({dispatch, commit}, req) {
     commit('setSelectedReq', req);
-    this._vm.$socket.emit('getRespond', {url: req.req.url});
+    this._vm.$socket.emit('getRespond', {req: req.req});
   }
 }
 // mutations are operations that actually mutates the state.

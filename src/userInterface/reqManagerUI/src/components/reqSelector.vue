@@ -1,23 +1,35 @@
 <template>
   <div class="requestSelector">
-    <el-tree
-      class="filter-tree"
-      :data="reqTree"
-      :props="defaultProps"
-      default-expand-all
-      :filter-node-method="filterNode"
-      ref="tree2">
-    </el-tree>
+    <div class="pad10">
+      <el-input
+        placeholder="Filter keyword"
+        v-model="filterText">
+      </el-input>
+      <el-tree
+        class="filter-tree"
+        :data="reqTree"
+        :expand-on-click-node="false"
+        :filter-node-method="filterNode"
+        ref="treeReq">
+        <span class="node" slot-scope="{ node, data }" @click=" () => handleCurrentChange(data.req)">
+          <span class="p name">{{node.label}}</span>
+          <span class="p status">{{data.req.status}}</span>
+          <span class="p status">{{data.req.formatedDate}}</span>
+          <span class="p status">{{data.req.freq}}</span>
+          <span class="p status">{{data.req.respondWay.type}}</span>
+        </span>
+      </el-tree>
 
-    <el-table :data="reqList"  :default-sort = "{prop: 'req.baseUrl', order: 'descending'}"
-              highlight-current-row @current-change="handleCurrentChange" style="width: 100%" :row-class-name="tableRowClassName">
-      <el-table-column width="300" sortable prop="req.baseUrl" label="url"></el-table-column>
-      <el-table-column sortable prop="status" label="Status"></el-table-column>
-      <el-table-column sortable prop="formatedDate" label="Date"></el-table-column>
-      <el-table-column sortable prop="freq" label="Frequency"></el-table-column>
-      <el-table-column sortable prop="respondWay.type" label="respond Way"></el-table-column>
-    </el-table>
-  </div>
+      <el-table v-if="false" :data="reqList"  :default-sort = "{prop: 'req.baseUrl', order: 'descending'}"
+                highlight-current-row @current-change="handleCurrentChange" style="width: 100%" :row-class-name="tableRowClassName">
+        <el-table-column width="300" sortable prop="req.baseUrl" label="url"></el-table-column>
+        <el-table-column sortable prop="status" label="Status"></el-table-column>
+        <el-table-column sortable prop="formatedDate" label="Date"></el-table-column>
+        <el-table-column sortable prop="freq" label="Frequency"></el-table-column>
+        <el-table-column sortable prop="respondWay.type" label="respond Way"></el-table-column>
+      </el-table>
+    </div>
+    </div>
 </template>
 
 <script>
@@ -30,8 +42,14 @@ export default {
     currentRow: 'selectedRequest',
   }),
   created () {},
+  watch: {
+    filterText(val) {
+      this.$refs.treeReq.filter(val);
+    }
+  },
   data () {
     return {
+      filterText: '',
     }
   },
   methods: {
@@ -49,6 +67,10 @@ export default {
       if (val) {
         this.$store.dispatch('setSelectedRequest', val);
       }
+    },
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.label.indexOf(value) !== -1;
     }
   }
 }
@@ -69,6 +91,9 @@ export default {
 .active td{
   background: #a0cdff!important;
 }
+.pad10 {
+  padding: 0 10px;
+}
 
 .flash {
   background: #00ff22;
@@ -76,5 +101,17 @@ export default {
 .el-table .cell {
   word-break: normal!important;
 }
+  .node{
+    display: flex;
+    flex: 1 1 auto;
+    .p{
+      flex: 1 1 auto;
+      text-overflow: ellipsis;
+      display: block;
+      overflow: hidden;
+      margin: 10px;
+      max-width: 100px;
+    }
+  }
 
 </style>
