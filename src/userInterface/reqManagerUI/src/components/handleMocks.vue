@@ -93,16 +93,16 @@
           this.newMockError = 'There is another mock with the same name, please use a uniqe name';
         } else {
           if (this.isEditing) {
-            this.$socket.emit('editMock', {url: this.selectedRequest.req.url, newMock: this.newMock});
+            this.$socket.emit('editMock', {req: this.selectedRequest.req, newMock: this.newMock});
           } else {
-            this.$socket.emit('addNewMock', {url: this.selectedRequest.req.url, newMock: this.newMock});
+            this.$socket.emit('addNewMock', {req: this.selectedRequest.req, newMock: this.newMock});
           }
           this.dialogTableVisible = false;
           this.isEditing = false;
         }
       },
       removeMock () {
-        this.$socket.emit('removeMock', {url: this.selectedRequest.req.url, mock: this.selectedMock});
+        this.$socket.emit('removeMock', {req: this.selectedRequest.req, mock: this.selectedMock});
       },
       editMock () {
         this.newMock = {

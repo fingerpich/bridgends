@@ -8,6 +8,9 @@
       <request-selector></request-selector>
       <div class="respondContainer" v-if="selectedRequest">
         <el-button class="backtolist" v-on:click="showDetail=false">back to list</el-button>
+        <div>{{selectedRequest.req.url}}</div>
+        <div>|</div>
+        <api-target-selector></api-target-selector>
         <h3>Respond With</h3>
         <div class="selectRespondWay">
           <el-radio v-for="opt in respondWays" v-model="respondWayType" :key="opt" :value="opt" :label="opt" border></el-radio>
@@ -36,7 +39,6 @@
         <!--API-->
         <div class="respondWith" v-if="respondWayType === RespondType.API">
           <h4>API</h4>
-          <api-target-selector></api-target-selector>
           <api-check></api-check>
           <div class="asfaf">
             <handle-api-fail></handle-api-fail>
@@ -99,7 +101,7 @@
     },
     methods: {
       clearCache: function() {
-        this.$socket.emit('clearCache', this.selectedRequest.req.url);
+        this.$socket.emit('clearCache', {req: this.selectedRequest.req});
       }
     }
   }
@@ -122,11 +124,16 @@
       width:100%;
     }
     .respondContainer{
-      width:100%;
+      width: 0%;
+      overflow: hidden;
     }
     &.showDetail{
       .requestSelector{
-        width: 0;
+        width: 0%;
+        overflow: hidden;
+      }
+      .respondContainer{
+        width:100%;
       }
     }
     @media screen and (min-width: 900px) {

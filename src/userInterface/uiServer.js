@@ -15,45 +15,48 @@ class uiServer{
                 const ip = ws.handshake.headers.host;
                 console.log("user " + ip + " connected");
                 ws.emit('list', reqManager.serialize());
-                ws.on('testApi', (url) => {
-                    reqManager.testAPI(url).then((res) => {
+                ws.on('testApi', ({req}) => {
+                    reqManager.testAPI(req.url, req.method).then((res) => {
                         ws.emit('update', res);
                     });
                 });
-                ws.on('clearCache', (url) => {
-                    reqManager.clearCache(url).then((serialized) => {
-                        ws.emit('update', JSON.stringify(serialized));
+                ws.on('clearCache', ({req}) => {
+                    const pReq = reqManager.getExactRequest(req.url, req.method);
+                    pReq.clearCache(url).then((respond) => {
+                        const reqData = pReq.serialize();
+                        reqData.respond = respond;
+                        this.broadCast(reqData);
                     });
                 });
-                ws.on('changeRespondWay', ({url, respondWay}) => {
-                    const req = reqManager.getExactRequest(url);
-                    req.setRespondWay(respondWay).then((respond) => {
-                        const reqData = req.serialize();
+                ws.on('changeRespondWay', ({req, respondWay}) => {
+                    const pReq = reqManager.getExactRequest(req.url, req.method);
+                    pReq.setRespondWay(respondWay).then((respond) => {
+                        const reqData = pReq.serialize();
                         reqData.respond = respond;
                         this.broadCast(reqData);
                     });
                 });
 
-                ws.on('addNewMock', ({url, newMock}) => {
-                    const req = reqManager.getExactRequest(url);
-                    req.addMock(newMock);
-                    this.broadCast(req.serialize());
+                ws.on('addNewMock', ({req, newMock}) => {
+                    const pReq = reqManager.getExactRequest(req.url, req.method);
+                    pReq.addMock(newMock);
+                    this.broadCast(pReq.serialize());
                 });
-                ws.on('removeMock', ({url, mock}) => {
-                    const req = reqManager.getExactRequest(url);
-                    req.removeMock(mock);
-                    this.broadCast(req.serialize());
+                ws.on('removeMock', ({req, mock}) => {
+                    const pReq = reqManager.getExactRequest(req.url, req.method);
+                    pReq.removeMock(mock);
+                    this.broadCast(pReq.serialize());
                 });
-                ws.on('editMock', ({url, newMock}) => {
-                    const req = reqManager.getExactRequest(url);
-                    req.editMock(newMock);
-                    this.broadCast(req.serialize());
+                ws.on('editMock', ({req, newMock}) => {
+                    const pReq = reqManager.getExactRequest(req.url, req.method);
+                    pReq.editMock(newMock);
+                    this.broadCast(pReq.serialize());
                 });
 
-                ws.on('getRespond', ({url}) => {
-                    const req = reqManager.getExactRequest(url);
-                    req.getRespond().then((respond) => {
-                        const reqData = req.serialize();
+                ws.on('getRespond', ({req}) => {
+                    const pReq = reqManager.getExactRequest(req.url, req.method);
+                    pReq.getRespond().then((respond) => {
+                        const reqData = pReq.serialize();
                         reqData.respond = respond;
                         ws.emit('update', JSON.stringify(reqData));
                     });

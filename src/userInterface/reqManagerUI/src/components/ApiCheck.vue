@@ -38,7 +38,7 @@
     },
     methods: {
       testAPI () {
-        this.$socket.emit('testApi', this.selectedRequest.req.url);
+        this.$socket.emit('testApi', {req: this.selectedRequest.req});
       }
     }
   }
