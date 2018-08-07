@@ -112,7 +112,10 @@ class RequestManager {
 
         // get containers and all child which are in nested tree of this container
         const containersChildCounts = containers.map(cr => {
-            return {container: cr, childCounts: this.list.filter(r => r.req.url.includes(cr.req.url)).length};
+            return {container: cr,
+                childCounts: this.list.filter(r => {
+                    return (r.req.url !== cr.req.url) && (r.req.url.includes(cr.req.url))
+                }).length};
         });
 
         // update container count to children which are child of this container not a grand child
@@ -120,7 +123,11 @@ class RequestManager {
             .sort((a, b) => a.childCounts - b.childCounts)
             .forEach(crcc => {
                 const childs = this.list
-                    .filter(r => !r.parent && r.req.url.includes(crcc.container.req.url))
+                    .filter(r => {
+                        return !r.parent &&
+                            r.req.url !== crcc.container.req.url &&
+                            r.req.url.includes(crcc.container.req.url)
+                    })
                 // childs.forEach(r => r.parent = crcc.container);
                 crcc.childs = childs;
                 crcc.childCounts = childs.length;
@@ -132,26 +139,29 @@ class RequestManager {
 
         branchingContainers.forEach((bc) => {
             const slicedUrls = bc.childs.map(c => c.req.url.slice(bc.container.req.url.length))
-            const candidates = slicedUrls.map(url => {
-                const candidate = [url];
-                while(url){
-                    url = url.slice(0, /(\/|\&|\?)/g.test(url).lastIndex);
-                    candidate.push(url)
+            const candidates = Object.keys(slicedUrls.reduce((urlsObj, url) => {
+                const regex = /(\/|\&|\?)/g;
+                const splitted = url.split(regex);
+                let urlPart = splitted[0];
+                urlsObj[urlPart] = 1;
+                for (let i = 1; i < splitted.length;i += 2) {
+                    urlPart += splitted[i] + splitted[i+1];
+                    urlsObj[urlPart] = 1;
                 }
-                return candidate;
-            })
-            candidates
+                return urlsObj;
+            }, {}));
+            const sortedCandidates = candidates
                 .map(candid => {
                     let cover = slicedUrls.filter(url => url.indexOf(candid) === 0).length;
-                    if (cover === slicedUrls.length) { cover = 0; }
-                    return {candid, cover };
+                    const ecover = (cover === slicedUrls.length || cover === 1) ? 0 : cover;
+                    return {candid, cover, ecover };
                 })
                 .sort((cc1, cc2) => {
                     // sort which includes more request and then sort by length of common string in url
-                    return cc2.cover - cc1.cover || cc2.candid.length - cc1.candid.length
+                    return cc2.ecover - cc1.ecover || cc2.candid.length - cc1.candid.length
                 });
-            const bestCandidate = candidates[0];
-            if (bestCandidate.cover > (slicedUrls.length / 2)) {
+            const bestCandidate = sortedCandidates[0];
+            if (bestCandidate.ecover > (slicedUrls.length / 2)) {
                 const req = new proxiedRequest({req:{url: bc.container.req.url + bestCandidate.candid}}, this.defaultTimeout);
                 this.list.push(req)
             }
