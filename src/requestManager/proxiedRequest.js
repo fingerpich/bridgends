@@ -48,11 +48,14 @@ class ProxiedRequest {
             } else if (type === RespondTypes.MOCK) {
                 matched = this._getMock(name);
             }
-            return respondFile.load(matched[matched.length - 1].file);
+            if (matched.length) {
+                return respondFile.load(matched[matched.length - 1].file);
+            } else {
+                return Promise.reject(type + ' has not defined');
+            }
         } else {
             return respondFile.load(this.respondWay.file);
         }
-
     }
     _getMocks () {
         return this.respondOptions.filter(ro => ro.type === RespondTypes.MOCK);
@@ -197,7 +200,6 @@ class ProxiedRequest {
             const altway = this.respondWay.alternativeWay;
             if (!altway || (altway && altway.auto)) {
                 this.setAlternativeWay({type: RespondTypes.CACHE, data: RespondTypes.CACHE});
-                console.log(this.respondWay.alternativeWay);
             }
         }
     }

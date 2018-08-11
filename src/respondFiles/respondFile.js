@@ -33,19 +33,19 @@ class FileResponds {
             try {
                 fs.readFile(filePath, 'utf-8', (err, data) => {
                     if (err) {
-                        console.log(err.message);
+                        console.log('error loading file ', err.message);
                     }
                     else {
                         try {
                             const cached = JSON.parse(data);
                             resolve(cached);
                         } catch (e) {
-                            console.log(e.message);
+                            console.log('error in parsing loaded file', e.message);
                         }
                     }
                 });
             } catch(e) {
-                console.log(e);
+                console.log('error in finding file', e);
                 reject()
             }
         });

@@ -65,6 +65,8 @@ class RequestManager {
                         .getRespond(RespondTypes.CACHE)
                         .then((cacheData) => {
                             resolve(cacheData);
+                        }, () => {
+                            // TODO: return as its API or an error
                         });
 
                 } else {
@@ -85,7 +87,6 @@ class RequestManager {
     }
 
     findSimilarCachedRequest (originUrl, method) {
-        // TODO: use method
         let url = originUrl;
         const removeFromEnd = (url, char) => {
             return url.slice(0, url.lastIndexOf(char));
@@ -95,7 +96,10 @@ class RequestManager {
         for (let c in chars) {
             while (url.indexOf(c) > 0) {
                 url = removeFromEnd(url, '&');
-                const lst = this.list.filter((pr) => pr.req.url !== originUrl && pr.req.url.indexOf(url) > -1 && pr.hasCache());
+                const lst = this.list.filter((pr) => {
+                    return !pr.isContainer && pr.req.method === method && pr.req.url !== originUrl &&
+                        pr.req.url.indexOf(url) > -1 && pr.hasCache()
+                });
                 if (lst.length) {
                     return lst[lst.length - 1];
                 }
@@ -174,7 +178,7 @@ class RequestManager {
             try {
                 this.normalizeTreeByAddingContainer();
             } catch(e) {
-                console.log(e);
+                console.log('error in normalize tree: ',e);
             }
         }
     }

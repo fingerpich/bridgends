@@ -79,7 +79,7 @@ class Bridgends {
                         reqManager.respondAlternatives(req.url, req.method).then((data) => {
                             this.respondClient(res, data);
                         }, (err) => {
-                            console.log(err);
+                            console.log('error in finding alternative way', err);
                             this.respondClient(res, envelope);
                         });
                     }
