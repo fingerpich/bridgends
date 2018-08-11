@@ -1,19 +1,20 @@
 {
   "name": "bridgends",
   "version": "1.1.3",
-  "description": "development tool to cache, test, debug, proxy, mock backends API.",
+  "repository": "https://github.com/fingerpich/bridgends",
+  "homepage": "https://github.com/fingerpich/bridgends",
+  "description": "Its a development tool to make it easier to work with under development APIs",
   "main": "index.js",
   "scripts": {
-    "build": "cd src/userInterface/reqManagerUI;npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "postinstall": ""
+    "postinstall": "cd src/userInterface/reqManagerUI;npm i;npm run build"
   },
   "bin": {
     "bridgends": "./cli.js"
   },
   "author": "Mojtaba Zarei(fingerpich)",
-  "license": "MIT",
+  "license": "ISC",
   "dependencies": {
     "axios": "^0.18.0",
     "commander": "^2.15.1",
