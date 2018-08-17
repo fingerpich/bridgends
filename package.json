@@ -13,7 +13,7 @@
   "bin": {
     "bridgends": "./cli.js"
   },
-  "author": "Mojtaba Zarei(fingerpich)",
+  "author": "Mojtaba Zarei(Fingerpich)<zarei.bs@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.18.0",

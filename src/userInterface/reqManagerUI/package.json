@@ -1,8 +1,8 @@
 {
   "name": "req-manager-ui",
   "version": "1.0.0",
-  "description": "it will manage all request and how we want to deal with them",
-  "author": "mojtaba <zarei.bs@gmail.com>",
+  "description": "It shows whats going on in bridgends core",
+  "author": "Mojtaba Zarei(Fingerpich)<zarei.bs@gmail.com>",
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",

@@ -8,10 +8,7 @@
       <request-selector></request-selector>
       <div class="respondContainer" v-if="selectedRequest">
         <el-button class="backtolist" v-on:click="showDetail=false">back to list</el-button>
-        <div>{{selectedRequest.req.url}}</div>
-        <div>|
-          <el-button class="showManageHeader" v-on:click="showDetail=false">h</el-button>
-        </div>
+        <div class="url"><small>{{selectedRequest.req.url}}</small></div>
         <api-target-selector></api-target-selector>
         <h3>Respond With</h3>
         <div class="selectRespondWay">
@@ -113,8 +110,9 @@
 <style lang="scss">
   .header{
     padding: 17px 20px;
-    margin: 0 0 30px;
-    background: #797979;
+    margin: 0 0 0px;
+    color: #aaa;
+    background: #f3f3f3;
     h4{
       font-weight: normal;
       margin: 0;
@@ -128,7 +126,11 @@
     }
     .respondContainer{
       width: 0%;
+      padding-top: 50px;
       overflow: hidden;
+      .url{
+
+      }
     }
     &.showDetail{
       .requestSelector{
