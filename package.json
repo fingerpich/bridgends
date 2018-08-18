@@ -8,7 +8,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "postinstall": "cd src/userInterface/reqManagerUI;npm i;npm run build"
+    "mockClient": "node ./mock/client.js",
+    "mockServer": "node ./mock/server.js",
+    "mockBridge": "node index.js --port 6464 --targets localhost:3033",
+    "mock": "node ./mock/client.js; node ./mock/server.js",
+    "postinstall": "cd src/userInterface/reqManagerUI;npm i;npm run build",
+    "build": "cd src/userInterface/reqManagerUI;npm i;npm run build"
   },
   "bin": {
     "bridgends": "./cli.js"
