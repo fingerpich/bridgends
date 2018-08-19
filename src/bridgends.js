@@ -20,37 +20,45 @@ class Bridgends {
     }
 
     _cacheMiddleWare () {
-        const removeProxy = (req) => {
-            req.url = req.url.replace(this.config.proxyPath, '');
+        const removeProxy = (url) => {
+            return url.replace(this.config.proxyPath, '');
         }
         return proxy({
             target: this.config.targets[0],
             pathRewrite: {[this.config.proxyPath]: ''},
             router: (req) => {
                 // it will re-target option.target for specific requests
-                removeProxy(req);
-                reqManager.addNewRequestIfItsNotExist(req); // list will update if it was a new request
-                const list = reqManager.getRequestAndParents(req.url, req.method);
-                reqManager.markRequestsPulsed(req, list);
-                return reqManager.getTarget(list);
+                const url = removeProxy(req.url);
+                const newContainerAdded = reqManager.addNewRequestIfItsNotExist(url, req.method); // list will update if it was a new request
+                if (newContainerAdded) uiServer.broadCastList();
+                const list = reqManager.getRequestAndParents(url, req.method);
+                reqManager.markRequestsPulsed(url, req, list);
+                const target = reqManager.getTarget(list);
+                return target;
             },
             onError: (err) => {
 
             },
             onProxyReq: (proxyReq, req, res) => {
-                removeProxy(req);
-                const requested = reqManager.getExactRequest(req.url,req.method);
+                const url = removeProxy(req.url);
+                const requested = reqManager.getExactRequest(url, req.method);
                 uiServer.broadCast(requested.serialize());
 
-                const respondWay = requested.getRespondWay();
+                const list = reqManager.getRequestAndParents(url, req.method);
+                const headers = reqManager.getHeaders(list);
+                const respondWay = reqManager.getRespondWay(list);
                 if (respondWay.type !== RespondTypes.API) { // Its Mock or Cache
                     requested.getRespond().then(data => {
                         this.respondClient(res, data);
                     });
                 }
 
+                headers.forEach(h => {
+                    proxyReq.setHeader(h.key, h.value);
+                });
+
                 requested.onTimeout = () => {
-                    reqManager.respondAlternatives(requested.req.url).then(data => {
+                    reqManager.respondAlternatives(requested, respondWay).then(data => {
                         this.respondClient(res, data);
                     }, (err) => {
                         this.respondClient(res, {body:{err}});
@@ -58,8 +66,8 @@ class Bridgends {
                 }
             },
             onProxyRes: (proxyRes, req, res) => {
-                removeProxy(req);
-                const requested = reqManager.getExactRequest(req.url, req.method);
+                const url = removeProxy(req.url);
+                const requested = reqManager.getExactRequest(url, req.method);
                 let body = '';
                 proxyRes.on('data', (data) => {
                     data = data.toString('utf-8');
@@ -76,7 +84,7 @@ class Bridgends {
                     if (requested.isValidResponse(envelope)) {
                         this.respondClient(res, envelope);
                     } else {
-                        reqManager.respondAlternatives(req.url, req.method).then((data) => {
+                        reqManager.respondAlternatives(url, req.method).then((data) => {
                             this.respondClient(res, data);
                         }, (err) => {
                             console.log('error in finding alternative way', err);

@@ -1,7 +1,8 @@
-const proxiedRequest = require('./proxiedRequest.js');
-const fileName = 'requests';
+const LeafRequest = require('./leafRequest.js');
+const ContainerRequest = require('./containerRequest.js');
 const respondFile = require('../respondFiles/respondFile.js');
 const RespondTypes = require('./respondType.js');
+const fileName = 'requests';
 
 class RequestManager {
     constructor () {
@@ -13,13 +14,22 @@ class RequestManager {
     }
 
     deserialize (list) {
-        this.list = list.map((rq) => {return new proxiedRequest(rq);});
+        this.list = list.map((rq) => {
+            if (rq.isContainer) {
+                return new ContainerRequest(rq)
+            }
+            else {
+                //we dont fed timeout because every request has its timeout and saved in list
+                return new LeafRequest(rq);
+            }
+        });
+
         this.addRootUrl();
     }
 
     addRootUrl () {
         if (!this.list.find(r => r.matchUrl('/'))) {
-            const root = new proxiedRequest({req: {url: '/'}}, this.defaultTimeout, true);
+            const root = new ContainerRequest({req: {url: '/'}});
             root.setTarget(this.targets[0]);
             this.list.push(root);
         }
@@ -54,10 +64,9 @@ class RequestManager {
         return this.list.filter(r => r.matchUrl(url, method));
     }
 
-    respondAlternatives (url, method) {
+    respondAlternatives (requested, respondWay) {
         return new Promise((resolve, reject) => {
-            const requested = this.getExactRequest(url, method);
-            const alternativeWay = requested.respondWay.alternativeWay;
+            const alternativeWay = respondWay.alternativeWay;
             if (alternativeWay) {
                 if (alternativeWay.type === RespondTypes.API) {
                     // It will respond as another request
@@ -68,7 +77,6 @@ class RequestManager {
                         }, () => {
                             // TODO: return as its API or an error
                         });
-
                 } else {
                     requested.getRespond(alternativeWay.type, alternativeWay.data).then((data) => {
                         resolve(data);
@@ -111,7 +119,7 @@ class RequestManager {
     // add container requests whenever childrens gets more than what user can handle them
     normalizeTreeByAddingContainer () {
         const sensitiveCount = 5;
-        // this.list.forEach(r => r.parent = null);
+        this.list.forEach(r => r.parent = null);
         const containers = this.list.filter(r => r.isContainer);
 
         // get containers and all child which are in nested tree of this container
@@ -120,11 +128,10 @@ class RequestManager {
                 childCounts: this.list.filter(r => {
                     return (r.req.url !== cr.req.url) && (r.req.url.includes(cr.req.url))
                 }).length};
-        });
+        }).sort((a, b) => a.childCounts - b.childCounts);
 
         // update container count to children which are child of this container not a grand child
         containersChildCounts
-            .sort((a, b) => a.childCounts - b.childCounts)
             .forEach(crcc => {
                 const childs = this.list
                     .filter(r => {
@@ -132,7 +139,7 @@ class RequestManager {
                             r.req.url !== crcc.container.req.url &&
                             r.req.url.includes(crcc.container.req.url)
                     })
-                // childs.forEach(r => r.parent = crcc.container);
+                childs.forEach(r => r.parent = crcc.container);
                 crcc.childs = childs;
                 crcc.childCounts = childs.length;
             });
@@ -141,6 +148,7 @@ class RequestManager {
         const branchingContainers = containersChildCounts
             .filter(crcc => crcc.childCounts > sensitiveCount)
 
+        let success = false;
         branchingContainers.forEach((bc) => {
             const slicedUrls = bc.childs.map(c => c.req.url.slice(bc.container.req.url.length))
             const candidates = Object.keys(slicedUrls.reduce((urlsObj, url) => {
@@ -156,6 +164,7 @@ class RequestManager {
             }, {}));
             const sortedCandidates = candidates
                 .map(candid => {
+                    //TODO: cover should be the number of node which is first child of this new container
                     let cover = slicedUrls.filter(url => url.indexOf(candid) === 0).length;
                     const ecover = (cover === slicedUrls.length || cover === 1) ? 0 : cover;
                     return {candid, cover, ecover };
@@ -165,29 +174,26 @@ class RequestManager {
                     return cc2.ecover - cc1.ecover || cc2.candid.length - cc1.candid.length
                 });
             const bestCandidate = sortedCandidates[0];
-            if (bestCandidate.ecover > (slicedUrls.length / 2)) {
-                const req = new proxiedRequest({req:{url: bc.container.req.url + bestCandidate.candid}}, this.defaultTimeout);
-                this.list.push(req)
+            if (bestCandidate.ecover > sensitiveCount) {
+                const req = new ContainerRequest({req:{url: bc.container.req.url + bestCandidate.candid}});
+                this.list.push(req);
+                success = true;
             }
-        })
+        });
+        return success;
     }
 
-    addNewRequestIfItsNotExist (req) {
-        if (!this.list.find(r => r.matchExactly(req.url, req.method))) {
-            this.list.push(new proxiedRequest({req}, this.defaultTimeout));
-            try {
-                this.normalizeTreeByAddingContainer();
-            } catch(e) {
-                console.log('error in normalize tree: ',e);
-            }
+    addNewRequestIfItsNotExist (url, method) {
+        if (!this.list.find(r => r.matchExactly(url, method))) {
+            this.list.push(new LeafRequest({req:{url: url, method: method}}, this.defaultTimeout));
+            return this.normalizeTreeByAddingContainer();
         }
     }
-    markRequestsPulsed (req, list) {
-        list.forEach(r => r.requested(req));
+    markRequestsPulsed (url, req, list) {
+        list.forEach(r => r.requested(url, req));
     }
     getTarget(list) {
         const targets = list
-            .filter(r => r.isContainer)
             .sort((a, b) => a.req.url.length - b.req.url.length)
             .map(r => r.getTarget())
             .filter(t => !!t);
@@ -195,6 +201,68 @@ class RequestManager {
             return targets[targets.length - 1]; // its nearest parent which has set target
         } else {
             return '0.0.0.0';
+        }
+    }
+    getHeaders(list) {
+        const headers = list
+            .map(r => r.getHeaders())
+            .filter(h => !!h)
+        return headers;
+    }
+
+    getRespondWay(list) {
+        const rws = list.sort((a, b) => b.req.url.length - a.req.url.length)
+            .map(r => {return {r, rw: r.getRespondWay()}})
+            .filter(rrw => rrw.rw !== RespondTypes.AS_THEY_SETTLED);
+        // rws[0].rw is respond way for the request
+        // rws[1].rw is respond way for his nearest parent if changed its way
+        const theRequest = rws[0];
+        const nearFather = rws[1];
+        if (nearFather) {
+            if (nearFather.rw.indexOf(RespondTypes.MOCK_ALL) > -1) {
+                const mockName = nearFather.rw.slice(RespondTypes.MOCK_ALL.length);
+                return nearFather.r._getMock(mockName);
+            } else if (nearFather.rw.indexOf(RespondTypes.PRIORITY) > -1) {
+                const priority = nearFather.rw.slice(RespondTypes.PRIORITY.length);
+                if (priority === RespondTypes.API_CACHE_MOCK) {
+                    const apiWay = theRequest.getApiWay();
+                    if (theRequest.hasCache()) {
+                        apiWay.alternativeWay = theRequest._getCache()
+                    } else if (theRequest._getMocks().length) {
+                        apiWay.alternativeWay = theRequest._getActivatedMock()
+                    }
+                    return apiWay;
+                } else if (priority === RespondTypes.CACHE_API_MOCK) {
+                    if (theRequest.hasCache()) {
+                        return theRequest._getCache();
+                    } else {
+                        const apiWay = theRequest.getApiWay();
+                        if (theRequest._getMocks().length) {
+                            apiWay.alternativeWay = theRequest._getActivatedMock();
+                        }
+                        return apiWay;
+                    }
+                }
+                } else if (priority === RespondTypes.MOCK_CACHE_API) {
+                    if (theRequest._getMocks().length) {
+                        return theRequest._getActivatedMock();
+                    } else if (theRequest.hasCache()) {
+                        return theRequest._getCache();
+                    } else {
+                        return theRequest.getApiWay();
+                    }
+                }
+            } else if (nearFather.rw.indexOf(RespondTypes.AS_ANOTHER_REQUEST) > -1) {
+                const anotherUrl = nearFather.rw.slice(RespondTypes.AS_ANOTHER_REQUEST.length);
+                const anotherReq = this.getExactRequest(anotherUrl, theRequest.method);
+                if (anotherReq.hasCache()) {
+                    return anotherReq.getCache();
+                } else {
+                    return theRequest.rw;
+                }
+
+        } else {
+            return theRequest.rw;
         }
     }
 }
