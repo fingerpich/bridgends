@@ -83,10 +83,12 @@ class RequestManager {
                     });
                 }
             } else {
+                const url = requested.req.url;
+                const method = requested.req.method;
                 const simReq = this.findSimilarCachedRequest(url, method);
                 if (simReq) {
                     requested.setAlternativeWay({type: RespondTypes.API, data: simReq.req.url, auto: true});
-                    return this.respondAlternatives(url, method);
+                    return this.respondAlternatives(requested, respondWay);
                 } else {
                     reject('can not find any similar cached request for' + requested.req.url);
                 }
@@ -219,11 +221,14 @@ class RequestManager {
         const theRequest = rws[0];
         const nearFather = rws[1];
         if (nearFather) {
-            if (nearFather.rw.indexOf(RespondTypes.MOCK_ALL) > -1) {
-                const mockName = nearFather.rw.slice(RespondTypes.MOCK_ALL.length);
-                return nearFather.r._getMock(mockName);
-            } else if (nearFather.rw.indexOf(RespondTypes.PRIORITY) > -1) {
-                const priority = nearFather.rw.slice(RespondTypes.PRIORITY.length);
+            const splitted = nearFather.rw.split(RespondTypes.Delimiter)
+            const way = splitted[0];
+            const data = splitted[1];
+            if (way === RespondTypes.MOCK_ALL) {
+                const mockName = data;
+                return {respondWay: nearFather.r._getMock(mockName), requester: nearFather.r};
+            } else if (way === RespondTypes.PRIORITY) {
+                const priority = data;
                 if (priority === RespondTypes.API_CACHE_MOCK) {
                     const apiWay = theRequest.getApiWay();
                     if (theRequest.hasCache()) {
@@ -231,38 +236,37 @@ class RequestManager {
                     } else if (theRequest._getMocks().length) {
                         apiWay.alternativeWay = theRequest._getActivatedMock()
                     }
-                    return apiWay;
+                    return {respondWay: apiWay, requester: theRequest.r};
                 } else if (priority === RespondTypes.CACHE_API_MOCK) {
                     if (theRequest.hasCache()) {
-                        return theRequest._getCache();
+                        return {respondWay: theRequest._getCache(), requester: theRequest.r};
                     } else {
                         const apiWay = theRequest.getApiWay();
                         if (theRequest._getMocks().length) {
                             apiWay.alternativeWay = theRequest._getActivatedMock();
                         }
-                        return apiWay;
+                        return {respondWay: apiWay, requester: theRequest.r};
                     }
-                }
                 } else if (priority === RespondTypes.MOCK_CACHE_API) {
                     if (theRequest._getMocks().length) {
-                        return theRequest._getActivatedMock();
+                        return {respondWay: theRequest._getActivatedMock(), requester: theRequest.r};
                     } else if (theRequest.hasCache()) {
-                        return theRequest._getCache();
+                        return {respondWay: theRequest._getCache(), requester: theRequest.r};
                     } else {
-                        return theRequest.getApiWay();
+                        return {respondWay: theRequest.getApiWay(), requester: theRequest.r};
                     }
                 }
-            } else if (nearFather.rw.indexOf(RespondTypes.AS_ANOTHER_REQUEST) > -1) {
-                const anotherUrl = nearFather.rw.slice(RespondTypes.AS_ANOTHER_REQUEST.length);
+            } else if (way === RespondTypes.AS_ANOTHER_REQUEST) {
+                const anotherUrl = data;
                 const anotherReq = this.getExactRequest(anotherUrl, theRequest.method);
                 if (anotherReq.hasCache()) {
-                    return anotherReq.getCache();
+                    return {respondWay: anotherReq.getCache(), requester: anotherReq};
                 } else {
-                    return theRequest.rw;
+                    return {respondWay: theRequest.rw, requester: theRequest.r};
                 }
-
+            }
         } else {
-            return theRequest.rw;
+            return {respondWay: theRequest.rw, requester: theRequest.r};
         }
     }
 }

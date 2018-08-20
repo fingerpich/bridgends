@@ -46,9 +46,9 @@ class Bridgends {
 
                 const list = reqManager.getRequestAndParents(url, req.method);
                 const headers = reqManager.getHeaders(list);
-                const respondWay = reqManager.getRespondWay(list);
+                const {respondWay, requester} = reqManager.getRespondWay(list);
                 if (respondWay.type !== RespondTypes.API) { // Its Mock or Cache
-                    requested.getRespond().then(data => {
+                    requester.getRespond().then(data => {
                         this.respondClient(res, data);
                     });
                 }

@@ -1,4 +1,7 @@
 let cacheIDCounter = 111;
+const respondFile = require('../respondFiles/respondFile.js');
+const RespondTypes = require('./respondType.js');
+
 class Request {
     constructor(req) {
         this.usedDates = [];
@@ -8,7 +11,7 @@ class Request {
     serialize () {
         return {
             req: this.req,
-            isContainer: false,
+            isContainer: this.isContainer,
             timeout: this.timeout,
             target: this.target,
             status: this.status,
@@ -24,7 +27,7 @@ class Request {
         return this.respondOptions.filter(ro => ro.type === RespondTypes.MOCK);
     }
     _getMock (name) {
-        return this._getMocks().filter(ro => ro.name === name);
+        return this._getMocks().find(ro => ro.name === name);
     }
     _getActivatedMock() {
         return this._getMocks().find(ro => ro.lastActivated);

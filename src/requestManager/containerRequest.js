@@ -6,6 +6,7 @@ class ContainerRequest extends Request {
     constructor (req) {
         super(req);
         this.isContainer = true;
+        this.respondOptions = [];
         this.respondWay = RespondTypes.AS_THEY_SETTLED;
     }
 
@@ -14,13 +15,16 @@ class ContainerRequest extends Request {
     }
 
     getRespond (type, name) {
-        if (type === RespondTypes.MOCK) {
-            const matched = this._getMock(name);
-            if (matched.length) {
-                return respondFile.load(matched[matched.length - 1].file);
+        const splitted = this.respondWay.split(RespondTypes.Delimiter);
+        if (splitted[0] === RespondTypes.MOCK_ALL) {
+            const matched = this._getMock(splitted[1]);
+            if (matched) {
+                return respondFile.load(matched.file);
             } else {
                 return Promise.reject(type + ' has not defined');
             }
+        } else {
+            return Promise.reject('container dont have data');
         }
     }
 
