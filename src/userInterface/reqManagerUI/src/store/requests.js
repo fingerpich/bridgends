@@ -13,16 +13,22 @@ const INHERIT = 'Inherit';
 const getters = {
   treeRequests: state => {
     const count = (str, regex) => (str.match(regex) || []).length;
-    const containers = state.requests.map(r => ({r, s: count(r.req.url, /(\/|\&|\?)/g)}));
-    containers.sort((a, b) => a.s - b.s);
+    const containers = state.requests.map(r => ({r, s: count(r.req.url, /(\/|\&|\?|\#)/g)}));
+    containers.sort((a, b) => {
+      const slashDif = a.s - b.s;
+      if (slashDif) return slashDif;
+      const reqLenDif = a.r.req.url.length - b.r.req.url.length;
+      if (reqLenDif) return reqLenDif;
+      return a.r.req.url < b.r.req.url ? -1 : 1;
+    } );
     const flattenTree = [];
     const tree = [];
     containers.forEach(({r,s}) => {
-      const newItem = {id:r.req.url, label: r.req.url, children: [], req: r};
+      const newItem = {id: r.req.url, label: r.req.url, children: [], req: r};
       if (flattenTree.length) {
         const ancestors = flattenTree.filter(item => r.req.url.includes(item.id));
         const parent = ancestors.reduce((acc, item) => item.id.length > acc.id.length ? item : acc, flattenTree[0]);
-        newItem.label = newItem.label.slice(parent.label.length);
+        newItem.label = newItem.label.slice(parent.req.req.url.length);
         parent.children.push(newItem);
       } else {
         tree.push(newItem);
@@ -40,6 +46,9 @@ const getters = {
       list.push(INHERIT);
     }
     return list;
+  },
+  getHeaders() {
+    return state.selectedReq.headers;
   },
   getSelectedRequestTarget: state => {
     return state.selectedReq.target || INHERIT
@@ -165,11 +174,7 @@ const mutations = {
       if (state.selectedReq && state.selectedReq.req.url === matchReq.req.url) {
         state.selectedReq = matchReq;
       }
-      if(!matchReq.updateTime) matchReq.updateTime = 0;
-      matchReq.updateTime++;
-      setTimeout(()=> {
-        matchReq.updateTime--;
-      },300);
+      matchReq.lastUsed = matchReq.usedDates[0];
     } else {
       state.requests.push(processReq(changedReq));
     }

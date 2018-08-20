@@ -9,9 +9,13 @@
         class="filter-tree"
         :data="reqTree"
         :expand-on-click-node="false"
+        @node-expand="onExpand"
+        @node-collapse="onCollapse"
+        node-key="id"
+        :default-expanded-keys="expanded"
         :filter-node-method="filterNode"
         ref="treeReq">
-        <span class="node" slot-scope="{ node, data }" @click=" () => handleCurrentChange(data.req)">
+        <span class="node" :class="tableRowClassName({row: data.req})" slot-scope="{ node, data }" @click=" () => handleCurrentChange(data.req)">
           <span class="p name">{{node.label}}</span>
           <span class="p status">{{data.req.status}}</span>
           <span class="p status">{{data.req.formatedDate}}</span>
@@ -50,13 +54,23 @@ export default {
   data () {
     return {
       filterText: '',
+      expanded: [],
     }
   },
   methods: {
+    onExpand(node) {
+      this.expanded.push(node.id);
+    },
+    onCollapse(node) {
+      this.expanded = this.expanded.filter(id => id !== node.id)
+    },
     tableRowClassName({row, rowIndex}) {
       let className = '';
+      if (row.isContainer) {
+        className += 'container ';
+      }
       if (row && this.currentRow) {
-        if (row.req.url === this.currentRow.req.url) {
+        if (row.req.url === this.currentRow.req.url && row.req.method === this.currentRow.req.method) {
           className += 'active ';
         }
         className += (row.updateTime > 0) ? 'flash' : '';
@@ -95,8 +109,20 @@ export default {
   padding: 0 10px;
 }
 
-.flash {
-  background: #00ff22;
+/*.flash {*/
+  /*background: #00ff22;*/
+/*}*/
+/*.blink_me {*/
+  /*animation: blinker 1s linear infinite;*/
+/*}*/
+
+@keyframes blink {
+  0% {
+    background: #00ff22;;
+  }
+  100% {
+    background: inherit;
+  }
 }
 .el-table .cell {
   word-break: normal!important;
@@ -104,9 +130,9 @@ export default {
 .el-tree{
   margin: 10px 0;
 }
-.el-tree-node__content{
-  height: inherit;
-  padding: 11px 0;
+.el-tree-node__content {
+  height: inherit!important;
+  padding: 0!important;
 }
 .filterReq .el-input__inner{
   border: none;
@@ -117,9 +143,14 @@ export default {
   font-size: 20px;
 }
   .node{
+    animation: blink 0.1s linear 1;
     display: flex;
     flex: 1 1 auto;
     font-size: 0.8rem;
+    padding: 10px;
+    &.active{
+      background: #00dcff17;
+    }
     .p{
       flex: 1 1 auto;
       text-overflow: ellipsis;

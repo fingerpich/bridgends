@@ -4,7 +4,7 @@ const router = express.Router();
 const reqManager = require('../requestManager/reqManager.js');
 const io = require('socket.io');
 
-class uiServer{
+class uiServer {
     constructor() {
     }
 
@@ -29,9 +29,14 @@ class uiServer{
                         ws.emit('update', res);
                     });
                 });
+                ws.on('ChangeContainerResWay', ({respondWay, req}) => {
+                    getTheRequest(req).then(creq => {
+                        creq.setRespondWay(respondWay);
+                    })
+                });
                 ws.on('clearCache', ({req}) => {
                     getTheRequest(req).then(pReq => {
-                        pReq.clearCache(url).then((respond) => {
+                        pReq.clearCache().then((respond) => {
                             const reqData = pReq.serialize();
                             reqData.respond = respond;
                             this.broadCast(reqData);
@@ -80,11 +85,15 @@ class uiServer{
 
                 ws.on('getRespond', ({req}) => {
                     getTheRequest(req).then(pReq => {
-                        pReq.getRespond().then((respond) => {
-                            const reqData = pReq.serialize();
-                            reqData.respond = respond;
-                            ws.emit('update', JSON.stringify(reqData));
-                        });
+                        if (pReq.isContainer) {
+                            ws.emit('update', JSON.stringify(pReq.serialize()));
+                        } else {
+                            pReq.getRespond().then((respond) => {
+                                const reqData = pReq.serialize();
+                                reqData.respond = respond;
+                                ws.emit('update', JSON.stringify(reqData));
+                            });
+                        }
                     });
                 });
             });
@@ -92,6 +101,9 @@ class uiServer{
 
     broadCast(jsonData) {
         this.wss.sockets.emit('update', JSON.stringify(jsonData));
+    }
+    broadCastList() {
+        this.wss.sockets.emit('list', reqManager.serialize());
     }
 
     uiMiddleware(app) {
@@ -105,5 +117,6 @@ class uiServer{
         return router
     }
 }
+const instance = new uiServer();
 
-module.exports = new uiServer();
+module.exports = instance;
