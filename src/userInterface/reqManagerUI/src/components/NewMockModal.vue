@@ -1,17 +1,6 @@
 <template>
-  <div class="handleMock" >
-    <h4>Mock</h4>
-    <el-select v-if="mocks && mocks.length" v-model="selectedMock" placeholder="Select">
-      <el-option v-for="m in mocks" :key="m.name" :label="m.name" :value="m.name"></el-option>
-    </el-select>
-    <el-button icon="el-icon-plus" @click="dialogTableVisible = true"></el-button>
-    <div v-if="selectedMock">
-      <h5>respond body</h5>
-      <long-text :text="selectedRequest.respond && selectedRequest.respond.body"></long-text>
-      <el-button icon="el-icon-delete" @click="removeMock"></el-button>
-      <el-button icon="el-icon-edit" @click="editMock"></el-button>
-    </div>
-    <el-dialog title="New Mock" :visible.sync="dialogTableVisible">
+  <div>
+    <el-dialog title="New Mock" :visible.sync="visibility">
       <el-row>
         <el-col :span="12">
           <el-input placeholder="enterName" v-model="newMock.name"></el-input>
@@ -45,34 +34,31 @@
 </template>
 
 <script>
-  import RespondType from "../../../../requestManager/respondType.js"
-  import LongText from "./longText";
 
   export default {
-    name: 'handleMock',
-    components: {LongText},
+    props:{
+      mock: Object,
+      visibility: Boolean
+    },
+    name: 'NewMockModal',
+    components: {},
     computed: {
       selectedRequest() {
         return this.$store.getters.selectedRequest;
-      },
-      selectedMock: {
-        get: function() {
-          return this.$store.getters.respondWay.name;
-        },
-        set: function (value) {
-          this.$store.dispatch('changeRespondWay', this.mocks.filter(m => m.name === value)[0]);
-        }
       },
       mocks() {
         return this.$store.getters.getMocks;
       },
     },
-    created () {},
+    created () {
+      if (this.mock) {
+        this.isEditing = true;
+        this.newMock = mock;
+      }
+    },
     data () {
       return {
         httpStatus: [200, 403, 400, 503],
-        respondWays: [RespondType.MOCK,RespondType.CACHE,RespondType.API],
-        dialogTableVisible: false,
         newMock: {
           statusCode: 200,
           name: '',
@@ -97,21 +83,10 @@
           } else {
             this.$socket.emit('addNewMock', {req: this.selectedRequest.req, newMock: this.newMock});
           }
-          this.dialogTableVisible = false;
           this.isEditing = false;
         }
+        this.$emit('saved');
       },
-      removeMock () {
-        this.$socket.emit('removeMock', {req: this.selectedRequest.req, mock: this.selectedMock});
-      },
-      editMock () {
-        this.newMock = {
-          name: this.selectedMock,
-          ...this.selectedRequest.respond
-        };
-        this.isEditing = true;
-        this.dialogTableVisible = true;
-      }
     }
   }
 </script>
@@ -124,3 +99,4 @@
     }
   }
 </style>
+

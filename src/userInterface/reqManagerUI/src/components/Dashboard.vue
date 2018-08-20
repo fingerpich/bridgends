@@ -7,44 +7,71 @@
     <div class="container" :class="{showDetail: showDetail}">
       <request-selector></request-selector>
       <div class="respondContainer" v-if="selectedRequest">
-        <el-button class="backtolist" v-on:click="showDetail=false">back to list</el-button>
-        <div class="url"><small>{{selectedRequest.req.url}}</small></div>
-        <api-target-selector></api-target-selector>
-        <h3>Respond With</h3>
-        <div class="selectRespondWay">
-          <el-radio v-for="opt in respondWays" v-model="respondWayType" :key="opt" :value="opt" :label="opt" border></el-radio>
-        </div>
-
-        <!--MOCK-->
-        <div class="respondWith" v-if="respondWayType === RespondType.MOCK">
-          <div v-if="!selectedRequest.respond">
-            there is no mock please add a new one, this still is using {{selectedRequest.lastRespondWay}} to respond requests
-          </div>
-          <handle-mock ></handle-mock>
-        </div>
-
-        <!--CACHE-->
-        <div class="respondWith" v-if="respondWayType === RespondType.CACHE">
-          <h4>Cache</h4>
-          <div v-if="selectedRequest.respond">
-            <long-text :text="selectedRequest.respond && selectedRequest.respond.body"></long-text>
-            <el-button v-on:click="clearCache">clear cache</el-button>
+        <div class="fixed">
+          <el-button class="backtolist" v-on:click="showDetail=false">back to list</el-button>
+          <div class="url"><small>{{(selectedRequest.isContainer? 'Settings for all req started with ': 'Settings for ') + selectedRequest.req.url}}</small></div>
+          <api-target-selector></api-target-selector>
+          <h3>Respond With</h3>
+          <div v-if="selectedRequest.isContainer">
+            <el-cascader
+              placeholder="Try searching: another api"
+              :options="containerRespondOptions"
+              expand-trigger="hover"
+              :value="respondW"
+              @change="containerRespondChanged"
+              filterable
+            ></el-cascader>
           </div>
           <div v-else>
-            This request has not cached yet, this still is using {{selectedRequest.lastRespondWay}} to respond requests
-          </div>
-        </div>
+            <div class="selectRespondWay">
+              <el-radio v-for="opt in respondWays" v-model="respondWayType" :key="opt" :value="opt" :label="opt" border></el-radio>
+            </div>
 
-        <!--API-->
-        <div class="respondWith" v-if="respondWayType === RespondType.API">
-          <h4>API</h4>
-          <api-check></api-check>
-          <div class="asfaf">
-            <handle-api-fail></handle-api-fail>
+            <!--MOCK-->
+            <div class="respondWith" v-if="respondWayType === RespondType.MOCK">
+              <div v-if="!selectedRequest.respond">
+                there is no mock please add a new one, this still is using {{selectedRequest.lastRespondWay}} to respond requests
+              </div>
+              <div class="handleMock" >
+                <h4>Mock</h4>
+                <el-select v-if="mocks && mocks.length" v-model="selectedMock" placeholder="Select">
+                  <el-option v-for="m in mocks" :key="m.name" :label="m.name" :value="m.name"></el-option>
+                </el-select>
+                <el-button icon="el-icon-plus" @click="showMockEditor = true"></el-button>
+                <div v-if="selectedMock">
+                  <h5>respond body</h5>
+                  <long-text :text="selectedRequest.respond && selectedRequest.respond.body"></long-text>
+                  <el-button icon="el-icon-delete" @click="removeMock"></el-button>
+                  <el-button icon="el-icon-edit" @click="editMock"></el-button>
+                </div>
+              </div>
+            </div>
+
+            <!--CACHE-->
+            <div class="respondWith" v-if="respondWayType === RespondType.CACHE">
+              <h4>Cache</h4>
+              <div v-if="selectedRequest.respond">
+                <long-text :text="selectedRequest.respond && selectedRequest.respond.body"></long-text>
+                <el-button v-on:click="clearCache">clear cache</el-button>
+              </div>
+              <div v-else>
+                This request has not cached yet, this still is using {{selectedRequest.lastRespondWay}} to respond requests
+              </div>
+            </div>
+
+            <!--API-->
+            <div class="respondWith" v-if="respondWayType === RespondType.API">
+              <h4>API</h4>
+              <api-check></api-check>
+              <div class="asfaf">
+                <handle-api-fail></handle-api-fail>
+              </div>
+              <!--<label>add another api option</label>-->
+              <!--<el-button icon="el-icon-plus"></el-button>-->
+            </div>
           </div>
-          <!--<label>add another api option</label>-->
-          <!--<el-button icon="el-icon-plus"></el-button>-->
         </div>
+        <new-mock-modal :visibility="showMockEditor" :mock="editingMock" @saved="showMockEditor=false"></new-mock-modal>
       </div>
     </div>
   </div>
@@ -57,19 +84,42 @@
   import ApiCheck from "./ApiCheck";
   import ApiTargetSelector from "./apiTargetSelector";
   import LongText from "./longText";
-  import HandleMock from "./handleMocks";
+  import NewMockModal from "./NewMockModal";
 
   export default {
     name: 'Dashboard',
-    components: {HandleMock, LongText, ApiTargetSelector, ApiCheck, HandleApiFail, RequestSelector},
+    components: {NewMockModal, LongText, ApiTargetSelector, ApiCheck, HandleApiFail, RequestSelector},
     computed: {
       selectedRequest() {
         const sr = this.$store.getters.selectedRequest;
         if (sr) {
-          this.respondW = this.respondWay;
+          this.respondW = sr.isContainer? this.respondWay.split(RespondType.Delimiter) : this.respondWay.type;
         }
         this.showDetail = !!sr;
         return sr;
+      },
+      containerRespondOptions() {
+        const requests = this.$store.getters.allRequests;
+        const mocks = this.$store.getters.getMocks.map(m => ({value: m.name, label: m.name}));
+        mocks.push({value: 'newMock', label: 'New Mock'});
+        return [
+          {value: RespondType.AS_THEY_SETTLED, label: 'As They Settled'},
+          {value: RespondType.PRIORITY, label: 'Priority As Their', children:[
+              {value: RespondType.MOCK_CACHE_API, label: 'Mock | Cache | Api'},
+              {value: RespondType.CACHE_API_MOCK, label: 'Cache | Api | Mock'},
+              {value: RespondType.API_CACHE_MOCK, label: 'Api | Cache | Mock'},
+            ]},
+          {value: RespondType.AS_ANOTHER_REQUEST, label: 'As Another Request',
+            children: requests
+              .filter(r => {
+                return !r.isContainer && r.respondOptions.find(rw => rw.type === RespondType.CACHE)
+              })
+              .map(r => {
+                return {value: r.req.url, label: r.req.url};
+              })
+          },
+          {value: RespondType.MOCK_ALL, label: 'Mock All', children: mocks},
+        ];
       },
       respondOptions() {
         return this.$store.getters.respondOptions;
@@ -85,22 +135,55 @@
       },
       respondWay: {
         get: function () {
-          return this.$store.getters.selectedRequest.respondWay.type;
+          return this.$store.getters.selectedRequest.respondWay;
         }
       },
+      selectedMock: {
+        get: function() {
+          return this.$store.getters.respondWay.name;
+        },
+        set: function (value) {
+          this.$store.dispatch('changeRespondWay', this.mocks.find(m => m.name === value));
+        }
+      },
+      mocks() {
+        return this.$store.getters.getMocks;
+      },
     },
+
     created () {},
     data () {
       return {
         showDetail:false,
         respondWays: [RespondType.MOCK, RespondType.CACHE, RespondType.API],
         respondW: RespondType.API,
-        RespondType: RespondType
+        RespondType: RespondType,
+        showMockEditor: false,
+        editingMock: null,
       }
     },
     methods: {
+      containerRespondChanged: function (value) {
+        const joined = value.join(RespondType.Delimiter);
+        if (value[0] === RespondType.MOCK_ALL && value[1] === 'newMock') {
+          // add new mock
+          this.showMockEditor = true;
+        } else {
+          this.$socket.emit('ChangeContainerResWay', {respondWay: joined, req: this.selectedRequest.req});
+        }
+      },
       clearCache: function() {
         this.$socket.emit('clearCache', {req: this.selectedRequest.req});
+      },
+      removeMock () {
+        this.$socket.emit('removeMock', {req: this.selectedRequest.req, mock: this.selectedMock});
+      },
+      editMock () {
+        this.editingMock = {
+          name: this.selectedMock,
+          ...this.selectedRequest.respond
+        };
+        this.showMockEditor = true;
       }
     }
   }
@@ -110,13 +193,16 @@
 <style lang="scss">
   .header{
     padding: 17px 20px;
-    margin: 0 0 0px;
-    color: #aaa;
-    background: #f3f3f3;
+    margin: 0;
+    color: #bbb;
+    background: #f5f5f5;
     h4{
       font-weight: normal;
       margin: 0;
     }
+  }
+  .el-cascader-menu{
+    max-width: 160px;
   }
   .container{
     display: flex;
@@ -128,6 +214,10 @@
       width: 0%;
       padding-top: 50px;
       overflow: hidden;
+      position: relative;
+      .fixed{
+        position: fixed;
+      }
       .url{
 
       }
@@ -139,6 +229,9 @@
       }
       .respondContainer{
         width:100%;
+        .fixed{
+          width: 100%;
+        }
       }
     }
     @media screen and (min-width: 900px) {
@@ -151,6 +244,9 @@
         }
         .respondContainer{
           width:40%;
+          .fixed{
+            width: 40%;
+          }
         }
       }
     }

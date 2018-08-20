@@ -41,7 +41,7 @@ export default {
           anotherRequests.children = requests
             .filter(r => r !== selectedReq)
             .map(r => {
-              return {value: r.req.url, label: r.req.baseUrl};
+              return {value: r.req.url, label: r.req.url};
             });
           options.push(anotherRequests);
         }

@@ -1,10 +1,14 @@
 <template>
   <div class="targetSelector">
     <div v-if="!showAddTarget">
-      <el-button icon="el-icon-news" class="showManageHeader" v-on:click="showHeaders=true">header</el-button>
+      <el-button v-show="!showHeaders" icon="el-icon-news" class="showManageHeader" v-on:click="showHeaders=true"></el-button>
+      <el-button v-show="showHeaders" class="showManageHeader" v-on:click="showHeaders=false">save Header</el-button>
       <el-select v-model="selectedTarget" placeholder="Select">
         <el-option v-for="target in targets" :key="target" :label="target" :value="target"></el-option>
       </el-select>
+      <div>
+        <textarea placeholder="headers" v-show="showHeaders">{{headers}}</textarea>
+      </div>
     </div>
     <div v-else>
       <el-button icon="el-icon-check" v-on:click="addNewTarget"></el-button>
@@ -28,6 +32,9 @@ export default {
     apis() {
       return this.$store.getters.getAPIs;
     },
+    headers() {
+      return this.$store.getters.headers;
+    },
     selectedTarget: {
       get: function () {
         return this.$store.getters.getSelectedRequestTarget;
@@ -45,6 +52,7 @@ export default {
   data () {
     return {
       newTarget: '',
+      showHeaders: false,
       showAddTarget: false
     }
   },
@@ -65,6 +73,11 @@ export default {
 .targetSelector{
   .el-input{
     width: inherit;
+  }
+  textarea{
+    margin: 6px 0;
+    width: 307px;
+    height: 60px;
   }
 }
 </style>

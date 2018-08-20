@@ -1,7 +1,5 @@
 <template>
   <div class="CheckAPI">
-    <div><strong>{{ selectedRequest.req.baseUrl }}</strong></div>
-    <div><small>{{ selectedRequest.req.params }}</small></div>
     <p>
       <span>status: </span><small>{{ selectedRequest.status}}</small>
     </p>
