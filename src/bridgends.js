@@ -22,7 +22,7 @@ class Bridgends {
     _cacheMiddleWare () {
         const removeProxy = (url) => {
             return url.replace(this.config.proxyPath, '');
-        }
+        };
         return proxy({
             target: this.config.targets[0],
             pathRewrite: {[this.config.proxyPath]: ''},
@@ -41,21 +41,26 @@ class Bridgends {
             },
             onProxyReq: (proxyReq, req, res) => {
                 const url = removeProxy(req.url);
-                const requested = reqManager.getExactRequest(url, req.method);
-                uiServer.broadCast(requested.serialize());
 
                 const list = reqManager.getRequestAndParents(url, req.method);
                 const headers = reqManager.getHeaders(list);
+                headers.forEach(h => {
+                    for (const [key, value] of Object.entries(h)) {
+                        if (!proxyReq._headerSent) {
+                            proxyReq.setHeader(key, value);
+                        }
+                    }
+                });
+
+                const requested = reqManager.getExactRequest(url, req.method);
+                uiServer.broadCast(requested.serialize());
+
                 const {respondWay, requester} = reqManager.getRespondWay(list);
                 if (respondWay.type !== RespondTypes.API) { // Its Mock or Cache
                     requester.getRespond().then(data => {
                         this.respondClient(res, data);
                     });
                 }
-
-                headers.forEach(h => {
-                    proxyReq.setHeader(h.key, h.value);
-                });
 
                 requested.onTimeout = () => {
                     reqManager.respondAlternatives(requested, respondWay).then(data => {
@@ -68,12 +73,29 @@ class Bridgends {
             onProxyRes: (proxyRes, req, res) => {
                 const url = removeProxy(req.url);
                 const requested = reqManager.getExactRequest(url, req.method);
+
+                const _writeHead = res.writeHead;
+                const _end = res.end;
+                let _writeHeadArgs;
                 let body = '';
+
                 proxyRes.on('data', (data) => {
                     data = data.toString('utf-8');
                     body += data;
                 });
-                proxyRes.on('end', (data) => {
+
+                // Defer writeHead
+                res.writeHead = ( ...writeHeadArgs ) => {
+                    _writeHeadArgs = writeHeadArgs;
+                };
+                // Defer all writes
+                res.write = () => {};
+
+                const respondClientByForce = (data) => {
+                    _writeHead.call(res, data.statusCode, data.headers );
+                    _end.call(res, data.body );
+                };
+                res.end = () => {
                     const envelope = {
                         body: body,
                         reqTime: requested.usedDates[0],
@@ -81,17 +103,22 @@ class Bridgends {
                         headers: proxyRes.headers,
                         resTime: Date.now()
                     };
+
                     if (requested.isValidResponse(envelope)) {
-                        this.respondClient(res, envelope);
+                        respondClientByForce(envelope);
                     } else {
-                        reqManager.respondAlternatives(url, req.method).then((data) => {
-                            this.respondClient(res, data);
+                        reqManager.respondAlternatives(requested, requested.respondWay).then((data) => {
+                            respondClientByForce(data);
                         }, (err) => {
                             console.log('error in finding alternative way', err);
-                            this.respondClient(res, envelope);
+                            // this.respondClient(res, envelope);
+                            respondClientByForce(envelope);
                         });
                     }
                     uiServer.broadCast(requested.serialize());
+                }
+                proxyRes.on('end', (data) => {
+
                 });
             }
         });
