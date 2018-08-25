@@ -30,7 +30,7 @@ function sendRequestUsingProxy(path, method){
             console.log('err: ',error);
         }
         if (response) {
-            console.log('resp: ',response.body);
+            console.log('resp: ',response.statusCode, response.body);
         }
         setTimeout(sendNewQuestion, 2000);
     });

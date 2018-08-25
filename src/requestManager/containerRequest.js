@@ -6,8 +6,9 @@ class ContainerRequest extends Request {
     constructor (req) {
         super(req);
         this.isContainer = true;
-        this.respondOptions = [];
-        this.respondWay = RespondTypes.AS_THEY_SETTLED;
+        if (!this.respondWay) {
+            this.respondWay = RespondTypes.AS_THEY_SETTLED;
+        }
     }
 
     matchUrl (url, method) {

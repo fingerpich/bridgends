@@ -65,54 +65,48 @@ class RequestManager {
     }
 
     respondAlternatives (requested, respondWay) {
-        return new Promise((resolve, reject) => {
-            const alternativeWay = respondWay.alternativeWay;
-            if (alternativeWay) {
-                if (alternativeWay.type === RespondTypes.API) {
-                    // It will respond as another request
-                    this.getExactRequest(alternativeWay.data, method)
-                        .getRespond(RespondTypes.CACHE)
-                        .then((cacheData) => {
-                            resolve(cacheData);
-                        }, () => {
-                            // TODO: return as its API or an error
-                        });
-                } else {
-                    requested.getRespond(alternativeWay.type, alternativeWay.data).then((data) => {
-                        resolve(data);
-                    });
-                }
+        const alternativeWay = respondWay.alternativeWay;
+        if (alternativeWay) {
+            if (alternativeWay.type === RespondTypes.API) {
+                // It will respond as another request
+                return this.getExactRequest(alternativeWay.data, requested.req.method)
+                    .getRespond(RespondTypes.CACHE);
             } else {
-                const url = requested.req.url;
-                const method = requested.req.method;
-                const simReq = this.findSimilarCachedRequest(url, method);
-                if (simReq) {
-                    requested.setAlternativeWay({type: RespondTypes.API, data: simReq.req.url, auto: true});
-                    return this.respondAlternatives(requested, respondWay);
-                } else {
-                    reject('can not find any similar cached request for' + requested.req.url);
-                }
+                return requested.getRespond(alternativeWay.type, alternativeWay.data);
             }
-        });
+        } else {
+            const url = requested.req.url;
+            const method = requested.req.method;
+            const simReq = this.findSimilarCachedRequest(url, method);
+            if (simReq) {
+                requested.setAlternativeWay({type: RespondTypes.API, data: simReq.req.url, auto: true});
+                return this.respondAlternatives(requested, respondWay);
+            } else {
+                return Promise.reject('can not find any similar cached request for' + requested.req.url);
+            }
+        }
     }
 
     findSimilarCachedRequest (originUrl, method) {
-        let url = originUrl;
-        const removeFromEnd = (url, char) => {
-            return url.slice(0, url.lastIndexOf(char));
-        };
+        const filtered = this.list.filter(r => !r.isContainer && (r.req.method === method) && r.hasCache());
+        if (filtered.length) {
+            let url = originUrl;
+            const removeFromEnd = (url, char) => {
+                const lio = url.lastIndexOf(char);
+                return url.slice(0, lio);
+            };
 
-        const chars = ['&', '?', '/'];
-        for (let c in chars) {
-            while (url.indexOf(c) > 0) {
-                url = removeFromEnd(url, '&');
-                const lst = this.list.filter((pr) => {
-                    return !pr.isContainer && pr.req.method === method && pr.req.url !== originUrl &&
-                        pr.req.url.indexOf(url) > -1 && pr.hasCache()
-                });
-                if (lst.length) {
-                    return lst[lst.length - 1];
-                }
+            const chars = ['&', '?', '/'];
+            for (let c of chars) {
+                    while (url.includes(c)) {
+                        url = removeFromEnd(url, c);
+                        const lst = filtered.filter((pr) => {
+                            return pr.req.url.includes(url)
+                        });
+                        if (lst.length) {
+                            return lst[lst.length - 1];
+                        }
+                    }
             }
         }
         return 0;

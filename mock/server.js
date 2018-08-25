@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 
 app.all('*', function (req, res) {
-    console.log('Received a ', req.method, req.url);
+    console.log('Received a ', req.method, req.url, req.headers);
     res.send({answer: 'Yes'})
 });
 

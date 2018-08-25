@@ -7,10 +7,16 @@ class LeafRequest extends Request {
     constructor (req, defaultTimeout) {
         super(req);
         this.reqFileName = 0;
-        this.isContainer = false
-        if (!this.timeout) { this.timeout = defaultTimeout; }
-        this.respondOptions = [{type: RespondTypes.API, file: this._getFileName(), lastActivated: true}];
-        this.respondWay = this.respondOptions[0];
+        this.isContainer = false;
+        if (!this.timeout) {
+            this.timeout = defaultTimeout;
+        }
+        if (!this.respondOptions.length) {
+            this.respondOptions = [{type: RespondTypes.API, file: this._getFileName(), lastActivated: true}];
+        }
+        if (!this.respondWay) {
+            this.respondWay = this.respondOptions[0];
+        }
     }
 
     matchUrl (url, method) {
@@ -141,7 +147,10 @@ class LeafRequest extends Request {
     }
 
     cacheResponse (apiResponded) {
-        if (!this.respondOptions.filter(ro => ro.type === RespondTypes.CACHE).length) {
+        const cached = this._getCache();
+        if (cached) {
+            respondFile.save(apiResponded, cached.file);
+        } else {
             const cacheRespond = {type: RespondTypes.CACHE, file: this._getFileName(), lastActivated: true};
             this.respondOptions.push(cacheRespond);
             this.respondWay = cacheRespond;
