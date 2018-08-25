@@ -82,6 +82,12 @@ class uiServer {
                         this.broadCast(pReq.serialize());
                     });
                 });
+                ws.on('setHeader', ({req, headers}) => {
+                    getTheRequest(req).then(pReq => {
+                        pReq.setHeaders(headers);
+                        this.broadCast(pReq.serialize());
+                    });
+                });
 
                 ws.on('getRespond', ({req}) => {
                     getTheRequest(req).then(pReq => {
