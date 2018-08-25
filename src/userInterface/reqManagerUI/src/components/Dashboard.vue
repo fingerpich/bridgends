@@ -115,7 +115,7 @@
                 return !r.isContainer && r.respondOptions.find(rw => rw.type === RespondType.CACHE)
               })
               .map(r => {
-                return {value: r.req.url, label: r.req.url};
+                return {value: r.req.url, label: r.req.url, title: r.req.url};
               })
           },
           {value: RespondType.MOCK_ALL, label: 'Mock All', children: mocks},
@@ -200,6 +200,9 @@
       font-weight: normal;
       margin: 0;
     }
+  }
+  .el-tree-node__children{
+    margin: 0 0 0 10px;
   }
   .el-cascader-menu{
     max-width: 160px;

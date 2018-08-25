@@ -18,13 +18,15 @@
           </el-input>
         </el-col>
       </el-row>
-
-      <el-input
-        class="bodyTextArea"
-        type="textarea"
-        placeholder="body"
-        v-model="newMock.body">
-      </el-input>
+      <div class="botheditor">
+        <el-input
+          class="bodyTextArea"
+          type="textarea"
+          placeholder="body"
+          v-model="newMock.body">
+        </el-input>
+        <JsonEditor is-edit="true" @input="(t) => newMock.body = JSON.stringify(t)" :value="strmockbody" ></JsonEditor>
+      </div>
       <h3>
         <small>{{newMockError}}</small>
       </h3>
@@ -43,6 +45,13 @@
     name: 'NewMockModal',
     components: {},
     computed: {
+      strmockbody() {
+        try {
+          return JSON.parse(this.newMock.body);
+        } catch(e) {
+          return {};
+        }
+      },
       selectedRequest() {
         return this.$store.getters.selectedRequest;
       },
@@ -96,6 +105,13 @@
   .bodyTextArea {
     textarea {
       min-height: 200px!important;
+    }
+  }
+  .botheditor{
+    display: flex;
+    border: 1px solid silver;
+    > *{
+      width:50%;
     }
   }
 </style>

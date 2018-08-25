@@ -1,6 +1,6 @@
 <template>
   <div class="longText">
-    <code v-loading='!text'>{{decodeURI(text)}}</code>
+    <code v-loading='!text' v-html="prettyText"></code>
   </div>
 </template>
 
@@ -8,7 +8,16 @@
 export default {
   props:['text'],
   name: 'longText',
-  computed: {},
+  computed: {
+    prettyText() {
+      try{
+        const t = JSON.parse(this.text);
+        return JSON.stringify(t, null, 2);
+      } catch (e) {
+        return this.text;
+      }
+    }
+  },
   created () {},
   data () {
     return {
@@ -29,6 +38,10 @@ export default {
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 125px;
+    white-space: pre;
+    max-width: 250px;
+    text-align: left;
+    margin: auto;
   }
   .el-loading-mask {
     background: none;
