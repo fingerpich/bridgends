@@ -5,6 +5,7 @@ const RespondTypes = require('./respondType.js');
 class Request {
     constructor(req) {
         this.usedDates = [];
+        this.respondOptions = [];
         if (req) { Object.assign(this, req); }
     }
 
