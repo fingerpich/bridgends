@@ -124,6 +124,9 @@ class RequestManager {
         const addedList = lst.filter(url => !this.getExactRequest(url, undefined));
         addedList.forEach(url => {
             const req = new ContainerRequest({req:{url: url}});
+            if (url.length === 1 && this.targets && this.targets.length) {
+                req.setTarget(this.targets[0]);
+            }
             this.list.push(req);
         });
         return addedList.length;
