@@ -62,7 +62,7 @@ export default {
       this.expanded.push(node.id);
     },
     onCollapse(node) {
-      this.expanded = this.expanded.filter(id => id !== node.id)
+      this.expanded = this.expanded.filter(id => !id.includes(node.id))
     },
     tableRowClassName({row, rowIndex}) {
       let className = '';

@@ -24,16 +24,16 @@ class RequestManager {
             }
         });
 
-        this.addRootUrl();
+        // this.addRootUrl();
     }
 
-    addRootUrl () {
-        if (!this.list.find(r => r.matchUrl('/'))) {
-            const root = new ContainerRequest({req: {url: '/'}});
-            root.setTarget(this.targets[0]);
-            this.list.push(root);
-        }
-    }
+    // addRootUrl () {
+    //     if (!this.list.find(r => r.matchUrl('/'))) {
+    //         const root = new ContainerRequest({req: {url: '/'}});
+    //         root.setTarget(this.targets[0]);
+    //         this.list.push(root);
+    //     }
+    // }
 
     testAPI (url, method) {
         const req = this.getExactRequest(url, method);
@@ -48,7 +48,7 @@ class RequestManager {
                 this.deserialize(parsed);
             })
         } else {
-            this.addRootUrl();
+            // this.addRootUrl();
         }
 
         // Update requests file in every 10 minute
@@ -112,6 +112,22 @@ class RequestManager {
         return 0;
     }
 
+    addContainerForEveryRequest (url) {
+        const regex = /(\/|\&|\?)/g;
+        const splitted = url.split(regex);
+        const lst = [splitted[1]];
+        let urlAcc = '';
+        for (let i = 1; i < splitted.length;i += 2) {
+            if (i > 1) {lst.push(urlAcc);}
+            urlAcc += splitted[i] + splitted[i+1];
+        }
+        const addedList = lst.filter(url => !this.getExactRequest(url, undefined));
+        addedList.forEach(url => {
+            const req = new ContainerRequest({req:{url: url}});
+            this.list.push(req);
+        });
+        return addedList.length;
+    }
     // add container requests whenever childrens gets more than what user can handle them
     normalizeTreeByAddingContainer () {
         const sensitiveCount = 5;
@@ -182,7 +198,8 @@ class RequestManager {
     addNewRequestIfItsNotExist (url, method) {
         if (!this.list.find(r => r.matchExactly(url, method))) {
             this.list.push(new LeafRequest({req:{url: url, method: method}}, this.defaultTimeout));
-            return this.normalizeTreeByAddingContainer();
+            // return this.normalizeTreeByAddingContainer();
+            return this.addContainerForEveryRequest(url);
         }
     }
     markRequestsPulsed (url, req, list) {

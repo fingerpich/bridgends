@@ -45,6 +45,6 @@ const sendNewQuestion = () => {
     sendRequestUsingProxy(url, method);
 };
 
-setTimeout(sendNewQuestion, 2000);
+setTimeout(sendNewQuestion, 10 * 1000);
 
 app.listen(3031, () => console.log('I will send a lot of request from port 3031 to ' + uri));
