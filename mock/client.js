@@ -1,16 +1,19 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const request = require('request');
 const app = express();
+const StartTimepout = 1000;
+const IntervalTime = 10 * 1000;
+// const uri = 'http://localhost:3033';
+const uri = 'http://localhost:6464/proxy';
+
 app.use( bodyParser.json({}) );
 app.use(bodyParser.urlencoded({}));
 
 app.all('*', function (req, res) {
-    res.send({answer: 'ok'})
+    const proxy = request({ url: req + req.path});
+    req.pipe(uri);
 });
-// const uri = 'http://localhost:3033';
-const uri = 'http://localhost:6464/proxy';
-const request = require('request');
 
 function sendRequestUsingProxy(path, method){
     const clientServerOptions = {
@@ -32,11 +35,11 @@ function sendRequestUsingProxy(path, method){
         if (response) {
             console.log('resp: ',response.statusCode, response.body);
         }
-        setTimeout(sendNewQuestion, 2000);
+        setTimeout(sendNewQuestion, IntervalTime);
     });
 }
 const sendNewQuestion = () => {
-    const depth = Math.floor(5 + Math.random() * 6);
+    const depth = Math.floor(3 + Math.random() * 3);
     const url = Array.apply(null, Array(depth)).map((i,index) => {
         return 'url' + index + (Math.floor(Math.random() * 10))
     }).join('/');
@@ -45,6 +48,6 @@ const sendNewQuestion = () => {
     sendRequestUsingProxy(url, method);
 };
 
-setTimeout(sendNewQuestion, 10 * 1000);
+setTimeout(sendNewQuestion, StartTimepout);
 
-app.listen(3031, () => console.log('I will send a lot of request from port 3031 to ' + uri));
+app.listen(3031, () => console.log('localhost:3031 started sending random requests to ' + uri));

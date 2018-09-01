@@ -19,7 +19,9 @@
   },
   "author": "Mojtaba Zarei(Fingerpich)<zarei.bs@gmail.com>",
   "license": "ISC",
-  "pre-commit": ["build"],
+  "pre-commit": [
+    "build"
+  ],
   "dependencies": {
     "axios": "^0.18.0",
     "commander": "^2.15.1",
