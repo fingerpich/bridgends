@@ -225,8 +225,15 @@ class RequestManager {
             .filter(h => !!h)
         return headers;
     }
-
+    getPriority (list) {
+        const nearestParentPriority = list.filter(r=> r.isContainer)
+            .sort((a, b) => b.req.url.length - a.req.url.length)
+            .map(r => {return {r, rw: r.getRespondWay()}})
+            .find(rrw => rrw.rw.includes(RespondTypes.PRIORITY));
+        return nearestParentPriority;
+    }
     getRespondWay(list) {
+        const priority = this.getPriority(list);
         const rws = list.sort((a, b) => b.req.url.length - a.req.url.length)
             .map(r => {return {r, rw: r.getRespondWay()}})
             .filter(rrw => rrw.rw !== RespondTypes.AS_THEY_SETTLED);
