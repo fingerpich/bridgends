@@ -9,20 +9,28 @@
       <div class="respondContainer" v-if="selectedRequest">
         <div class="fixed">
           <el-button class="backtolist" v-on:click="showDetail=false">back to list</el-button>
-          <div class="url"><small>{{(selectedRequest.isContainer? 'Settings for all req started with ': 'Settings for ') + selectedRequest.req.url}}</small></div>
+
+          <div class="url">{{(selectedRequest.isContainer? 'All requests started with ': 'Settings for ')}}</div>
+          <h5>{{selectedRequest.req.url}}</h5>
+          <div>Will be sent to</div>
           <api-target-selector></api-target-selector>
-          <h3>Respond With</h3>
+
           <div v-if="selectedRequest.isContainer">
+            <h2> </h2>
+            <div>And responds</div>
             <el-cascader
               placeholder="Try searching: another api"
               :options="containerRespondOptions"
               expand-trigger="hover"
               :value="respondW"
-              @change="containerRespondChanged"
+              @input="containerRespondChanged"
               filterable
             ></el-cascader>
+            <el-button @click="removeMock" v-if="isUsingMock" icon="el-icon-delete"></el-button>
+            <el-button @click="editMock" v-if="isUsingMock" icon="el-icon-edit"></el-button>
           </div>
           <div v-else>
+            <h3>Respond With</h3>
             <div class="selectRespondWay">
               <el-radio v-for="opt in respondWays" v-model="respondWayType" :key="opt" :value="opt" :label="opt" border></el-radio>
             </div>
@@ -71,7 +79,7 @@
             </div>
           </div>
         </div>
-        <new-mock-modal :visibility="showMockEditor" :mock="editingMock" @saved="showMockEditor=false"></new-mock-modal>
+        <new-mock-modal @close="cancelNewMock" :visibility="showMockEditor" :mock="editingMock" @saved="showMockEditor=false"></new-mock-modal>
       </div>
     </div>
   </div>
@@ -94,6 +102,7 @@
         const sr = this.$store.getters.selectedRequest;
         if (sr) {
           this.respondW = sr.isContainer? this.respondWay.split(RespondType.Delimiter) : this.respondWay.type;
+          this.isUsingMock = this.respondW[0] === RespondType.MOCK_ALL;
         }
         this.showDetail = !!sr;
         return sr;
@@ -104,7 +113,7 @@
         mocks.push({value: 'newMock', label: 'New Mock'});
         return [
           {value: RespondType.AS_THEY_SETTLED, label: 'As They Settled'},
-          {value: RespondType.PRIORITY, label: 'Priority As Their', children:[
+          {value: RespondType.PRIORITY, label: 'With Priority', children:[
               {value: RespondType.MOCK_CACHE_API, label: 'Mock | Cache | Api'},
               {value: RespondType.CACHE_API_MOCK, label: 'Cache | Api | Mock'},
               {value: RespondType.API_CACHE_MOCK, label: 'Api | Cache | Mock'},
@@ -118,7 +127,7 @@
                 return {value: r.req.url, label: r.req.url, title: r.req.url};
               })
           },
-          {value: RespondType.MOCK_ALL, label: 'Mock All', children: mocks},
+          {value: RespondType.MOCK_ALL, label: 'Like', children: mocks},
         ];
       },
       respondOptions() {
@@ -160,15 +169,24 @@
         RespondType: RespondType,
         showMockEditor: false,
         editingMock: null,
+        lastWay: null,
+        isUsingMock: false
       }
     },
     methods: {
+      cancelNewMock() {
+        this.respondW = this.lastWay;
+        this.showMockEditor = false;
+      },
       containerRespondChanged: function (value) {
         const joined = value.join(RespondType.Delimiter);
         if (value[0] === RespondType.MOCK_ALL && value[1] === 'newMock') {
           // add new mock
+          this.lastWay = this.respondW;
+          this.respondW = value;
           this.showMockEditor = true;
         } else {
+          this.isUsingMock = value[0] === RespondType.MOCK_ALL;
           this.$socket.emit('ChangeContainerResWay', {respondWay: joined, req: this.selectedRequest.req});
         }
       },

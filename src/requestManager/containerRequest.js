@@ -49,11 +49,11 @@ class ContainerRequest extends Request {
         this.setRespondWay(RespondTypes.MOCK_ALL + RespondTypes.Delimiter + newMock.name);
     }
     editMock (editedMockData) {
-        const editedMock = this.editMockInOptions(mockData);
+        const editedMock = this.editMockInOptions(editedMockData);
         this.setRespondWay(RespondTypes.MOCK_ALL + RespondTypes.Delimiter + editedMock.name);
     }
     removeMock (mockData) {
-        const anotherMock = this.editMockInOptions(mockData);
+        const anotherMock = this.removeMockFromOptions(mockData);
         if (anotherMock) {
             this.setRespondWay(RespondTypes.MOCK_ALL + RespondTypes.Delimiter + anotherMock.name);
         } else {

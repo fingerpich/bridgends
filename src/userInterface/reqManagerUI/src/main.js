@@ -8,7 +8,7 @@ import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import locale from 'element-ui/lib/locale/lang/en'
 import 'font-awesome/css/font-awesome.css'
-import JsonEditor from 'Vue-edit-json'
+import JsonEditor from 'vue-edit-json'
 
 Vue.use(ElementUI, { locale });
 
@@ -23,4 +23,4 @@ new Vue({
   store,
   components: { App },
   template: '<App/>'
-})
+});

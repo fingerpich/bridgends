@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-dialog title="New Mock" :visible.sync="visibility">
+    <el-dialog @close="onClose" title="New Mock" :visible.sync="visibility">
       <el-row>
         <el-col :span="12">
           <el-input placeholder="enterName" v-model="newMock.name"></el-input>
@@ -62,23 +62,29 @@
     created () {
       if (this.mock) {
         this.isEditing = true;
-        this.newMock = mock;
+        this.newMock = this.mock || this.initMockData();
       }
     },
     data () {
       return {
         httpStatus: [200, 403, 400, 503],
-        newMock: {
-          statusCode: 200,
-          name: '',
-          body: '',
-          headers: '',
-        },
+        newMock: this.initMockData(),
         newMockError: '',
         isEditing: false,
       }
     },
     methods: {
+      onClose() {
+        this.$emit('close');
+      },
+      initMockData() {
+        return {
+          statusCode: 200,
+          name: '',
+          body: '',
+          headers: '',
+        }
+      },
       saveNewMock () {
         if (!this.newMock.name) {
           this.newMockError = 'Please fill out name field(name and body is required)';
@@ -92,9 +98,11 @@
           } else {
             this.$socket.emit('addNewMock', {req: this.selectedRequest.req, newMock: this.newMock});
           }
+          this.newMock = this.initMockData();
           this.isEditing = false;
+          this.$emit('saved');
         }
-        this.$emit('saved');
+
       },
     }
   }
