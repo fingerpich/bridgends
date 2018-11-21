@@ -1,25 +1,17 @@
-# Bridgends
-Its a development tool to manage and make api calls more reliable, more clear and faster for both team (frontend and backend)
+![Bridgends logo](https://www.bridgends.com/images/logo.png)
 
-[![MIT License][license-image]][license-url]
-[![NPM version][npm-version-image]][npm-url]
-[![dependencies Quality][dependencies-quality]][dependencies-quality-url]
-[![dev dependencies Quality][dev-dependencies-quality]][dev-dependencies-quality-url]
+# [Bridgends](https://www.bridgends.com)
+Its a development tool used to support frontend and backend developers during developing and using API.
 
+See more on [Bridgends.com](https://www.bridgends.com).
 
-## Installation
-```
-npm i bridgends -g
-```
+## Install and get started with bridgends
+[This page](https://www.bridgends.com/getting-started) helps you to get started easily with the application.
+The application uses embeded database and also the code has packaged into an executable file so you don't need to install any other dependencies.
+Download it from [here](https://www.bridgends.com/download).
 
-## Introduction
-It designed to run a http server between frontend developer system and
-under development APIs and makes you able to see requests and their responses in its ui
-and change the respond way (api, cache, mock) for each request.
-By default it responds by cache so frontend developer
-would not waste time for api latency or when api is down.
-
-#### How to run
+###### Install previous version
+If you want to test the previous version of bridgends which is not suggested you need to do as the following.
 Suppose we want to run bridgends on a front end developer's system and
 there is an API on http://192.168.82.198:81/api/
 
@@ -37,7 +29,7 @@ there is an API on http://192.168.82.198:81/api/
  - start front end web app
  - open `localhost:4243` in your browser and handle every request passing through
 
-#### CLI options
+###### CLI options
 
 Start and stop bridgends process
 ```
@@ -65,15 +57,3 @@ Run multi instance
 bridgends start name
 bridgends stop name
 ```
-
-[license-image]: http://img.shields.io/badge/license-MIT-blue.svg?style=flat
-[license-url]: LICENSE
-
-[npm-url]: https://npmjs.org/package/bridgends
-[npm-version-image]: http://img.shields.io/npm/v/bridgends.svg?style=flat
-
-[dependencies-quality]: https://david-dm.org/fingerpich/bridgends.svg
-[dependencies-quality-url]: https://david-dm.org/fingerpich/bridgends
-
-[dev-dependencies-quality]: https://david-dm.org/fingerpich/bridgends/dev-status.svg
-[dev-dependencies-quality-url]: https://david-dm.org/fingerpich/bridgends?type=dev
